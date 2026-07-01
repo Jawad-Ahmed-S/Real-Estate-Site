@@ -1,0 +1,27 @@
+{
+  "name": "real-estate-site",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node backend/index.js",
+    "dev": "nodemon backend/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jawad-Ahmed-S/Real-Estate-Site.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Jawad-Ahmed-S/Real-Estate-Site/issues"
+  },
+  "homepage": "https://github.com/Jawad-Ahmed-S/Real-Estate-Site#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "nodemon": "^3.1.14"
+  }
+}
