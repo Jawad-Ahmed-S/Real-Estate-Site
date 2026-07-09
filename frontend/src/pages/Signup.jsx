@@ -2,9 +2,7 @@
 import { useState } from "react";
 import { Home, Building2, UserRound, Eye, EyeOff } from "lucide-react";
 import axios from 'axios'
-import { useNavigate } from "react-router-dom";
-import {useDispatch,useSelector} from 'react-redux'
-import { signinFailure, signinStart, signinSucess } from "../redux/user/userSlice";
+import {useNavigate} from 'react-router-dom'
 import OAuth from "../components/OAuth";
 const C = {
   ink: "#0F1A2B",
@@ -72,16 +70,18 @@ function FloorPlan() {
   );
 }
 
-export default function Login() {
+export default function Signup() {
   
   const [form, setForm] = useState({
-    email: "", password: "",
+    firstName: "", lastName: "", email: "", password: "", confirm: "",
   });
   const [showPw, setShowPw] = useState(false);
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const {loading,error} = useSelector(state=>state.user)
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
+
+  const navigate = useNavigate();
   const strength = (() => {
     const v = form.password;
     let s = 0;
@@ -96,17 +96,22 @@ export default function Login() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(signinStart())
-    const {email,password} = form;
-    const newData = {email,password};
-    axios.post(`http://localhost:8000/api/v1/user/login`,newData)
+    if (form.password !== form.confirm) {
+      setError("Passwords don't match — give it another look.");
+      return;
+    }
+    setError("");
+    setLoading(true);
+    const {firstName,lastName,email,password} = form;
+    const newData = {firstName,lastName,email,password};
+    axios.post(`http://localhost:8000/api/v1/user/register`,newData)
     
     .then(res =>{
       const data = res.data;
       if(data.success === false){
-        dispatch(signinFailure(data.error))
+        setError(data.message);
       }
-      dispatch(signinSucess(data))
+      setLoading(false);
       console.log(res);
       navigate('/')
     })
@@ -114,13 +119,16 @@ export default function Login() {
       .catch(err => {
   console.log("status:", err.response?.status);
   console.log("server message:", err.response?.data);
-  dispatch(signinFailure(err.response?.data?.error || "Something went wrong"))
+  setError(err.response?.data?.error || "Something went wrong");
+  setLoading(false);
 });
+    
+}
+
+const handleGoogleLogin = async ()=>{
+consolelog('handle google')
+
   };
-  
-const handleGoogleLogin = async()=>{
-    console.log('handle login')
-  }
 
   return (
     <div className="min-h-screen w-full" style={{ backgroundColor: C.ink }}>
@@ -197,13 +205,33 @@ const handleGoogleLogin = async()=>{
                 Let's get you set up
               </h2>
               <p className="text-sm" style={{ color: C.charcoalSoft }}>
-                New to Keystone?{" "}
-                <a href="/signin" className="font-medium" style={{ color: C.brassDark }}>Register</a>
+                Already on Keystone?{" "}
+                <a href="/login" className="font-medium" style={{ color: C.brassDark }}>Login</a>
               </p>
             </div>
 
             <form onSubmit={handleSubmit}>
               
+
+              {/* Name */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: C.charcoal }}>First name</label>
+                  <input
+                    type="text" required placeholder="Amara" value={form.firstName} onChange={update("firstName")}
+                    className="w-full text-sm rounded-sm px-3 py-2.5 outline-none"
+                    style={{ border: `1px solid ${C.hair}`, color: C.charcoal }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: C.charcoal }}>Last name</label>
+                  <input
+                    type="text" required placeholder="Khan" value={form.lastName} onChange={update("lastName")}
+                    className="w-full text-sm rounded-sm px-3 py-2.5 outline-none"
+                    style={{ border: `1px solid ${C.hair}`, color: C.charcoal }}
+                  />
+                </div>
+              </div>
 
               {/* Email */}
               <div className="mb-4">
@@ -241,6 +269,25 @@ const handleGoogleLogin = async()=>{
                 <p className="text-xs mt-1.5" style={{ color: C.charcoalSoft }}>Use 8+ characters with a number and a symbol.</p>
               </div>
 
+              {/* Confirm password */}
+              <div className="mb-2">
+                <label className="block text-xs font-medium mb-1.5" style={{ color: C.charcoal }}>Confirm password</label>
+                <div className="relative">
+                  <input
+                    type={showConfirm ? "text" : "password"} required placeholder="Re-enter your password"
+                    value={form.confirm} onChange={update("confirm")}
+                    className="w-full text-sm rounded-sm px-3 py-2.5 pr-14 outline-none"
+                    style={{ border: `1px solid ${C.hair}`, color: C.charcoal }}
+                  />
+                  <button
+                    type="button" onClick={() => setShowConfirm(!showConfirm)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2"
+                    style={{ color: C.charcoalSoft }}
+                  >
+                    {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
 
               {error && (
                 <p className="text-xs mt-2 mb-1" style={{ color: "#B4553F" }}>{error}</p>
@@ -253,9 +300,9 @@ const handleGoogleLogin = async()=>{
                 style={{ backgroundColor: C.brassDark, color: C.paper }}
                 disabled={loading}
               >
-                {loading? 'Loading....' : 'Login'}
+                {loading? 'Loading....' : 'Sign up'}
               </button>
-
+              <OAuth/>
               <div className="flex items-center gap-3 my-5 text-xs" style={{ color: C.charcoalSoft }}>
                 <span className="flex-1 h-px" style={{ backgroundColor: C.hair }} />
                 or continue with
@@ -276,7 +323,6 @@ const handleGoogleLogin = async()=>{
                 </svg>
                 Continue with Google
               </button>
-              <OAuth />
 
               <p className="text-center text-xs mt-6" style={{ color: C.charcoalSoft }}>
                 By continuing you confirm you're at least 18 years old.
