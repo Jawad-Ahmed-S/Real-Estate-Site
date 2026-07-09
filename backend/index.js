@@ -3,6 +3,7 @@ import dotenv, { configDotenv } from "dotenv"
 import mongoose from "mongoose";
 import userRouter from './routes/user.route.js'
 import listingRouter from './routes/listing.route.js'
+import inquiryRouter from './routes/inquiry.route.js'
 import errorMiddleware from './middlewares/error.js'
 import cookieParser from "cookie-parser";
 import cors from 'cors'
@@ -18,6 +19,7 @@ app.use(cookieParser())
 
 app.use('/api/v1/user',userRouter)
 app.use('/api/v1/listing',listingRouter)
+app.use('/api/v1/inquiry',inquiryRouter)
 
 
 app.use(errorMiddleware)

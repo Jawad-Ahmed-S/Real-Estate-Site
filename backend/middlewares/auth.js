@@ -5,7 +5,6 @@ import jwt from 'jsonwebtoken'
 const verifyUser = catchAsyncError(async(req,res,next)=>{
 ;
     const {token} = req.cookies
-    console.log(token);
     if(!token){
         return next(new errorhandler(404,"Token Not Found!"))
     }

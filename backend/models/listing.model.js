@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const listingSchema = new mongoose.Schema(
     {
@@ -52,8 +52,9 @@ const listingSchema = new mongoose.Schema(
             type:Array,
             required:true
         },
-        userRef:{
-            type:String,
+        owner:{
+            type:Schema.Types.ObjectId,
+            ref:'User',
             required:true
         }
     },

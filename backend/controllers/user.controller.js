@@ -22,7 +22,7 @@ export const  login = asyncHandler(async(req,res,next)=>{
         return next(new errorHandler(404,"Please Enter both password and email!"))
     }
     const user = await User.findOne({email})
-    console.log(user)
+    
     if(!user){
         return next(new errorHandler(404,"User Not Found!"))
     }
@@ -39,19 +39,18 @@ export const  login = asyncHandler(async(req,res,next)=>{
 export const updateUser = asyncHandler(async (req,res,next)=>{
     
     const userid = req.user.id
-    console.log("Id ",userid)
+    
     const user =await  User.findById(userid)
     if(!user){
         return next(new errorHandler(404,"User Not found!"))
     } 
-    console.log(user)
     const updatedUserData = {
         firstName: req.body.firstName,
         lastName: req.body.lastName,
         email: req.body.email,
     }
     const updatedUser = await User.findByIdAndUpdate(userid,updatedUserData);
-    console.log(updatedUser)
+    
 
     return res.status(200).json({sucess:true,message:"User Updated Sucessfully!",user:updatedUser})
 })
