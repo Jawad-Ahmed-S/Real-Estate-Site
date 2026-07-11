@@ -104,16 +104,19 @@ export default function Signup() {
     setLoading(true);
     const {firstName,lastName,email,password} = form;
     const newData = {firstName,lastName,email,password};
-    axios.post(`http://localhost:8000/api/v1/user/register`,newData)
+    axios.post(`http://localhost:8000/api/v1/user/register`,newData,{
+      withCredentials:true
+    })
     
     .then(res =>{
       const data = res.data;
-      if(data.success === false){
+      if(data.success === true){
+        setLoading(false);
+        console.log(res);
+        navigate('/')
+      }else{
         setError(data.message);
       }
-      setLoading(false);
-      console.log(res);
-      navigate('/')
     })
     
       .catch(err => {

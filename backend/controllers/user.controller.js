@@ -1,6 +1,6 @@
 import User from '../models/user.model.js'
 import asyncHandler from '../utils/catchAsyncError.js'
-import errorHandler from '../utils/errorHandler.js'
+import errorHandler from '../utils/errorhandler.js'
 import sendToken from '../utils/jwt.js'
 import jsonwebtoken from 'jsonwebtoken'
 
@@ -42,13 +42,14 @@ export const updateUser = asyncHandler(async (req,res,next)=>{
     
     const user =await  User.findById(userid)
     if(!user){
-        return next(new errorHandler(404,"User Not found!"))
+        return next(new errorHandler(400,"User Not found!"))
     } 
     const updatedUserData = {
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        email: req.body.email,
+        firstName: req.body.firstName || user.firstName,
+        lastName: req.body.lastName || user.lastName,
+        email: req.body.email || user.email,
     }
+    console.log("i am here")
     const updatedUser = await User.findByIdAndUpdate(userid,updatedUserData);
     
 

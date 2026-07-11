@@ -7,6 +7,7 @@ import Signup from './pages/Signup'
 import Login from './pages/Login'
 import Profile from './pages/Profile'
 import PrivateRoute from './components/privateRoute'
+import ListingsPage from './pages/Listing'
 function App() {
   const [count, setCount] = useState(0)
 
@@ -18,6 +19,7 @@ function App() {
             <Route path='/' element={<Home/>}></Route>
             <Route path='/signup' element={<Signup/>}></Route>
             <Route path='/login' element={<Login/>}></Route>
+            <Route path='/listings' element={<ListingsPage/>}></Route>
             <Route path='/about' element={<About/>}></Route>
             <Route element={<PrivateRoute/>}>
               <Route path='/profile' element={<Profile/>}></Route>

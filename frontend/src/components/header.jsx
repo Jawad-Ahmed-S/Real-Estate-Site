@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Menu, X } from "lucide-react";
-
+import axios from 'axios'
+import { useNavigate } from "react-router-dom";
 const C = {
   ink: "#0F1A2B",
   paper: "#FBF9F4",
@@ -14,6 +15,26 @@ export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navigate = useNavigate();
+
+  const handleSignout =async ()=>{
+      const res = await axios.post(`http://localhost:8000/api/v1/user/logout`,{withCredentials:true})
+      .then(res =>{
+            const data = res.data;
+            if(data.success === true){
+              
+              console.log(res);
+              navigate('/login')
+            }else{console.log(data.error)
+            }
+          })
+          
+            .catch(err => {
+        console.log("status:", err.response?.status);
+        console.log("server message:", err.response?.data);
+      });
+  }
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -51,9 +72,14 @@ export default function Header() {
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="text-sm transition-colors" style={{ color: "#B7C6D3" }}>
-                  About
+                <Link to="/listings" className="text-sm transition-colors" style={{ color: "#B7C6D3" }}>
+                  Listings
                 </Link>
+              </li>
+              <li>
+                <button onClick={handleSignout} className="text-sm bg-green-800 p-2 rounded transition-colors" style={{ color: "#B7C6D3" }}>
+                  Signout
+                </button>
               </li>
             </ul>
           </nav>

@@ -1,8 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Camera, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
-// adjust this path to wherever your userSlice actually lives
-import { signinStart, signinSucess, signinFailure, clearError } from "../redux/user/userSlice";
+import { updateUserFailure, updateUserSuccess, updateUserStart, clearError } from "../redux/user/userSlice";
+import Header from "../components/header";
+import axios from "axios";
 
 const C = {
   ink: "#0F1A2B",
@@ -20,7 +21,7 @@ const fontDisplay = { fontFamily: "'Fraunces', serif" };
 const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
 export default function ProfilePage() {
-  const { currentUser, token, loading, error } = useSelector((state) => state.user);
+  const { currentUser, loading, error } = useSelector((state) => state.user);
   const dispatch = useDispatch();
   const fileInputRef = useRef(null);
 
@@ -31,9 +32,21 @@ export default function ProfilePage() {
   });
 
   const [avatarFile, setAvatarFile] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(currentUser?.avatar || "");
+  // avatarPreview only ever holds a local blob URL for an unsaved selection.
+  // Once a real avatar exists, it always comes from currentUser.avatar (redux),
+  // never from local state — that's the single source of truth after save.
+  const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarError, setAvatarError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  const displayedAvatar = avatarPreview || currentUser?.avatar || "";
+
+  // this page can otherwise show a leftover error from a previous
+  // action (e.g. a failed sign-in) that's still sitting in the store
+  useEffect(() => {
+    if (error) dispatch(clearError());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -62,36 +75,43 @@ export default function ProfilePage() {
     setAvatarFile(file);
     setAvatarPreview(URL.createObjectURL(file));
     setAvatarError("");
-
-    // TODO: kick off your own upload flow here if avatars upload
-    // separately from the rest of the form (e.g. straight to Firebase/S3),
-    // then setFormData(prev => ({ ...prev, avatar: uploadedUrl })) on success.
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSuccess(false);
-    dispatch(signinStart()); 
-    try {
-      // TODO: build your payload and fire your own request, e.g.:
-      //
-      // const payload = new FormData();
-      // payload.append("firstName", formData.firstName);
-      // payload.append("lastName", formData.lastName);
-      // payload.append("email", formData.email);
-      // if (avatarFile) payload.append("avatar", avatarFile);
-      //
-      // const res = await axios.put(`/api/user/update/${currentUser._id}`, payload, {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
-      //
-      // dispatch(signinSucess({ user: res.data.user, token })); // keep existing token, just refresh user
+    dispatch(updateUserStart());
 
-      dispatch(signinSucess({ user: { ...currentUser, ...formData }, token }));
+    try {
+      const payload = new FormData();
+      payload.append("firstName", formData.firstName);
+      payload.append("lastName", formData.lastName);
+      payload.append("email", formData.email);
+      if (avatarFile) payload.append("avatar", avatarFile);
+
+      const res = await axios.put(
+        `http://localhost:8000/api/v1/user/update`,
+        payload,
+        { withCredentials: true }
+      );
+      const updatedUser = res.data?.user ?? { ...currentUser, ...formData };
+      dispatch(updateUserSuccess(updatedUser));
+
+      setAvatarFile(null);
+      setAvatarPreview(null);
       setSuccess(true);
     } catch (err) {
-      // TODO: swap in the real error from your API response, e.g. err.response?.data?.message
-      dispatch(signinFailure("Something went wrong updating your profile."));
+      console.log("Update profile error:", err.response?.data || err.message || err);
+
+      const backendMessage =
+        err.response?.data?.message ||   
+        err.response?.data?.error ||     
+        err.response?.data?.errors?.[0]?.message ||
+        (typeof err.response?.data === "string" ? err.response.data : null) ||
+        err.message ||                   
+        "Something went wrong updating your profile.";
+
+      dispatch(updateUserFailure(backendMessage));
     }
   };
 
@@ -102,6 +122,8 @@ export default function ProfilePage() {
         .kk-profile, .kk-profile input, .kk-profile button, .kk-profile label, .kk-profile p { font-family:'Inter', sans-serif; }
         .kk-profile input::placeholder { color: #5B7186; }
       `}</style>
+
+      <Header />
 
       <div
         className="absolute inset-0 pointer-events-none"
@@ -133,8 +155,8 @@ export default function ProfilePage() {
               className="relative w-28 h-28 rounded-full overflow-hidden group"
               style={{ border: `2px solid ${C.brass}` }}
             >
-              {avatarPreview ? (
-                <img src={avatarPreview} alt="Your avatar" className="w-full h-full object-cover" />
+              {displayedAvatar ? (
+                <img src={displayedAvatar} alt="Your avatar" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: "rgba(92,134,160,0.15)" }}>
                   <span style={{ ...fontDisplay, fontSize: 32, color: C.line }}>
@@ -212,6 +234,7 @@ export default function ProfilePage() {
                 Profile updated.
               </div>
             )}
+
             {error && (
               <div className="flex items-center gap-2 mb-4 text-sm" style={{ color: C.error }}>
                 <AlertCircle size={16} />

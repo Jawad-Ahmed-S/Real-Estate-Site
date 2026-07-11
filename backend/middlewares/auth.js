@@ -6,7 +6,7 @@ const verifyUser = catchAsyncError(async(req,res,next)=>{
 ;
     const {token} = req.cookies
     if(!token){
-        return next(new errorhandler(404,"Token Not Found!"))
+        return next(new errorHandler(404,"User token not Found!"))
     }
 
     const decodeData = jwt.verify(token,process.env.JWT_SECRET)

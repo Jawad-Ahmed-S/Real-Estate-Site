@@ -7,6 +7,6 @@ const router = express.Router()
 
 router.post('/create',verifyUser,createListing)
 router.route('/:id').get(getSingleListing).patch(verifyUser,updateListing).delete(verifyUser,deleteListing)
-router.route('/Listings').get(getAllListings)
+router.route('/').get(getAllListings)
 
 export default router;

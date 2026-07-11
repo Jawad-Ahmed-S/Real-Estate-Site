@@ -1,7 +1,7 @@
 import Listing from "../models/listing.model.js";
 import catchAsyncError from "../utils/catchAsyncError.js";
 import errorHandler from "../utils/errorHandler.js";
-
+import ApiFeatures from "../utils/apiFeatures.js";
 
 export const createListing = catchAsyncError(async(req,res,next)=>{
     const {name,description,address,regularPrices,discountedPrices,bedrooms,bathrooms,furnished,parking,type,offer,imageUrls} =  req.body;
@@ -45,7 +45,14 @@ export const getSingleListing = catchAsyncError(async (req,res,next)=>{
 
 export const getAllListings = catchAsyncError(async (req,res,next)=>{
 
-     const listings = await Listing.findById();
+    
+    const listingCount = await Listing.countDocuments()
+    const resultsPerPage = 10
+
+    const apifeature = new ApiFeatures(Listing.find(),req.query).search().filter().pagination(resultsPerPage)
+    const listings = await apifeature.query
+    
+
 
     if(!listings){
         return next(new errorHandler(404,"Listings Not found!"))
