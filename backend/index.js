@@ -1,5 +1,6 @@
+import './utils/loadEnv.js'
+
 import express from "express";
-import dotenv, { configDotenv } from "dotenv"
 import mongoose from "mongoose";
 import userRouter from './routes/user.route.js'
 import listingRouter from './routes/listing.route.js'
@@ -7,10 +8,13 @@ import inquiryRouter from './routes/inquiry.route.js'
 import errorMiddleware from './middlewares/error.js'
 import cookieParser from "cookie-parser";
 import cors from 'cors'
+import cloudinary from './config/cloudinary.js'
+
 const app = express()
 
 
-configDotenv()
+app.set('query parser', 'extended') 
+
 
 
 app.use(express.json())

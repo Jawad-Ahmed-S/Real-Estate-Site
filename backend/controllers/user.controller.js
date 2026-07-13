@@ -3,7 +3,7 @@ import asyncHandler from '../utils/catchAsyncError.js'
 import errorHandler from '../utils/errorhandler.js'
 import sendToken from '../utils/jwt.js'
 import jsonwebtoken from 'jsonwebtoken'
-
+import { uploadBufferToCloudinary,deleteFromCloudinary } from '../utils/cloudinaryUpload.js'
 export const  signin = asyncHandler(async (req,res,next)=>{
         
     const {firstName,lastName,email,password} = req.body
@@ -36,25 +36,40 @@ export const  login = asyncHandler(async(req,res,next)=>{
     sendToken(res,user,200,"User Loggedin! ")
 
 })
-export const updateUser = asyncHandler(async (req,res,next)=>{
-    
-    const userid = req.user.id
-    
-    const user =await  User.findById(userid)
-    if(!user){
-        return next(new errorHandler(400,"User Not found!"))
-    } 
-    const updatedUserData = {
-        firstName: req.body.firstName || user.firstName,
-        lastName: req.body.lastName || user.lastName,
-        email: req.body.email || user.email,
-    }
-    console.log("i am here")
-    const updatedUser = await User.findByIdAndUpdate(userid,updatedUserData);
-    
+export const updateUser = async (req, res) => {
+  try {
+    const updates = {};
+    if (req.body.firstName) updates.firstName = req.body.firstName;
+    if (req.body.lastName) updates.lastName = req.body.lastName;
+    if (req.body.email) updates.email = req.body.email;
 
-    return res.status(200).json({sucess:true,message:"User Updated Sucessfully!",user:updatedUser})
-})
+    if (req.file) {
+      const currentUser = await User.findById(req.userId); 
+
+      if (currentUser?.avatar?.public_id) {
+        await deleteFromCloudinary(currentUser.avatar.public_id);
+      }
+
+      const result = await uploadBufferToCloudinary(req.file.buffer, "avatar", {
+        transformation: [{ width: 300, height: 300, crop: "fill", gravity: "face" }],
+      });
+
+      updates.avatar = { url: result.secure_url, public_id: result.public_id };
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(req.user, updates, {
+      new:true,runValidators:true
+    }).select("-password");
+    
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
+    console.log(updatedUser);
+
+    res.status(200).json({ user: updatedUser });
+  } catch (err) {
+    res.status(500).json({ message: err.message || "Update failed" });
+  }
+};
 
 export const deleteUser = asyncHandler(async (req,res,next)=>{
     

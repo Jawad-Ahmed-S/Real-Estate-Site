@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Search, SlidersHorizontal, Loader2 } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { Search, SlidersHorizontal, Loader2, X } from "lucide-react";
 import axios from "axios";
 import Header from "../components/header";
 import PropertyCard from "../components/propertyCArd";
@@ -19,28 +19,25 @@ const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
 const PAGE_SIZE = 9;
 
-// Turns the current URL search params into the query object sent to the API.
-// NOTE: the backend key names here (searchTerm, minBedrooms, minPrice, maxPrice,
-// furnished, parking) are a best guess — swap them for whatever your listing
-// controller actually reads off req.query.
 function buildQueryParams(searchParams) {
   const params = {};
-  const q = searchParams.get("q");
+  const keyword = searchParams.get("keyword");
   const type = searchParams.get("type");
   const bedrooms = searchParams.get("bedrooms");
-  const price = searchParams.get("price");
+  const minPrice = searchParams.get("minPrice");
+  const maxPrice = searchParams.get("maxPrice");
   const furnished = searchParams.get("furnished");
   const parking = searchParams.get("parking");
 
-  if (q) params.searchTerm = q;
-  if (type) params.type = type; // "sell" | "rent" — matches the schema enum directly
-  if (bedrooms) params.minBedrooms = bedrooms;
+  if (keyword) params.keyword = keyword;
+  if (type) params.type = type;
+  if (bedrooms) params.bedrooms = Number(bedrooms);
   if (furnished === "true") params.furnished = true;
   if (parking === "true") params.parking = true;
 
-  if (price === "low") params.maxPrice = 5000000;
-  if (price === "mid") { params.minPrice = 5000000; params.maxPrice = 20000000; }
-  if (price === "high") params.minPrice = 20000000;
+  
+  if (minPrice && !isNaN(Number(minPrice))) params["discountedPrice[gte]"] = Number(minPrice);
+  if (maxPrice && !isNaN(Number(maxPrice))) params["discountedPrice[lte]"] = Number(maxPrice);
 
   return params;
 }
@@ -50,12 +47,13 @@ export default function ListingsPage() {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [priceError, setPriceError] = useState("");
 
-  // read every filter straight from the URL — the URL is the single source of truth
-  const query = searchParams.get("q") || "";
+  const query = searchParams.get("keyword") || "";
   const type = searchParams.get("type") || "";
-  const bedrooms = searchParams.get("bedrooms") || "";
-  const price = searchParams.get("price") || "";
+  const bedrooms = Number(searchParams.get("bedrooms")) || "";
+  const minPrice = Number(searchParams.get("minPrice")) || "";
+  const maxPrice = Number(searchParams.get("maxPrice")) || "";
   const furnished = searchParams.get("furnished") === "true";
   const parking = searchParams.get("parking") === "true";
   const page = Number(searchParams.get("page")) || 1;
@@ -68,7 +66,6 @@ export default function ListingsPage() {
       setLoading(true);
       setError("");
       try {
-        console.log(searchParams)
         const res = await axios.get("http://localhost:8000/api/v1/listing", {
           params: buildQueryParams(searchParams),
           withCredentials: true,
@@ -87,17 +84,42 @@ export default function ListingsPage() {
 
     fetchListings();
     return () => { ignore = true; controller.abort(); };
-    
   }, [searchParams.toString()]);
 
   const totalPages = Math.ceil(listings.length / PAGE_SIZE) || 1;
   const pageItems = listings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  
   const setParam = (key, value) => {
     const next = new URLSearchParams(searchParams);
     if (value) next.set(key, value);
     else next.delete(key);
+    next.set("page", "1");
+    setSearchParams(next);
+  };
+
+  const applyPriceRange = (e) => {
+    e.preventDefault();
+    const rawMin = e.target.minPrice.value.trim();
+    const rawMax = e.target.maxPrice.value.trim();
+
+    if (rawMin && rawMax && Number(rawMin) > Number(rawMax)) {
+      setPriceError("Min price can't be greater than max price.");
+      return;
+    }
+    setPriceError("");
+
+    const next = new URLSearchParams(searchParams);
+    if (rawMin) next.set("minPrice", rawMin); else next.delete("minPrice");
+    if (rawMax) next.set("maxPrice", rawMax); else next.delete("maxPrice");
+    next.set("page", "1");
+    setSearchParams(next);
+  };
+
+  const clearPriceRange = () => {
+    setPriceError("");
+    const next = new URLSearchParams(searchParams);
+    next.delete("minPrice");
+    next.delete("maxPrice");
     next.set("page", "1");
     setSearchParams(next);
   };
@@ -114,33 +136,41 @@ export default function ListingsPage() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
         .kk-listings, .kk-listings input, .kk-listings button, .kk-listings select { font-family:'Inter', sans-serif; }
+        .kk-listings input[type=number]::-webkit-inner-spin-button,
+        .kk-listings input[type=number]::-webkit-outer-spin-button { opacity: 1; }
       `}</style>
 
       <Header />
 
       <div className="kk-listings max-w-6xl mx-auto px-6 md:px-10 py-10 md:py-14">
-        <div className="mb-8">
-          <p className="uppercase mb-2" style={{ ...fontMono, fontSize: 11, letterSpacing: "0.12em", color: C.brassDark }}>
-            Browse
-          </p>
+        <div className="mb-8 flex justify-between">
+
           <h1 style={{ ...fontDisplay, fontWeight: 500, fontSize: 30, color: C.charcoal }}>
             All listings
           </h1>
+
+          <Link
+            to="/myListings"
+            className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-sm"
+            style={{ backgroundColor: C.brassDark, color: C.paper }}
+          >
+            My listings
+          </Link>
         </div>
 
         {/* filter bar */}
         <div
-          className="flex flex-wrap items-center gap-3 p-4 rounded-sm mb-4"
+          className="flex flex-wrap items-center gap-3 p-4 rounded-sm mb-2"
           style={{ backgroundColor: "#fff", border: `1px solid ${C.hair}` }}
         >
           <form
-            onSubmit={(e) => { e.preventDefault(); setParam("q", e.target.q.value); }}
+            onSubmit={(e) => { e.preventDefault(); setParam("keyword", e.target.keyword.value); }}
             className="flex items-center gap-2 rounded-sm px-3 flex-1 min-w-[200px]"
             style={{ border: `1px solid ${C.hair}` }}
           >
             <Search size={15} color={C.charcoalSoft} />
             <input
-              name="q"
+              name="keyword"
               defaultValue={query}
               key={query}
               placeholder="City, neighbourhood, or address"
@@ -167,27 +197,64 @@ export default function ListingsPage() {
             style={{ border: `1px solid ${C.hair}`, color: C.charcoal, backgroundColor: "#fff" }}
           >
             <option value="">Any beds</option>
-            <option value="1">1+ bed</option>
-            <option value="2">2+ beds</option>
-            <option value="3">3+ beds</option>
-            <option value="4">4+ beds</option>
+            <option value="1">1 bed</option>
+            <option value="2">2 beds</option>
+            <option value="3">3 beds</option>
+            <option value="4">4 beds</option>
           </select>
 
-          <select
-            value={price}
-            onChange={(e) => setParam("price", e.target.value)}
-            className="text-sm px-3 py-2.5 rounded-sm outline-none"
-            style={{ border: `1px solid ${C.hair}`, color: C.charcoal, backgroundColor: "#fff" }}
+          {/* min / max price range */}
+          <form
+            onSubmit={applyPriceRange}
+            className="flex items-center gap-2 rounded-sm px-3"
+            style={{ border: `1px solid ${C.hair}` }}
           >
-            <option value="">Any price</option>
-            <option value="low">Under PKR 50 lac</option>
-            <option value="mid">PKR 50 lac – 2 Cr</option>
-            <option value="high">Above PKR 2 Cr</option>
-          </select>
+            <input
+              name="minPrice"
+              type="number"
+              min="0"
+              defaultValue={minPrice}
+              key={`min-${minPrice}`}
+              placeholder="Min PKR"
+              className="w-24 py-2.5 text-sm outline-none bg-transparent"
+              style={{ color: C.charcoal }}
+            />
+            <span style={{ color: C.charcoalSoft }}>–</span>
+            <input
+              name="maxPrice"
+              type="number"
+              defaultValue={maxPrice}
+              key={`max-${maxPrice}`}
+              placeholder="Max PKR"
+              className="w-24 py-2.5 text-sm outline-none bg-transparent"
+              style={{ color: C.charcoal }}
+            />
+            <button
+              type="submit"
+              className="text-sm font-medium px-2 py-1 rounded-sm"
+              style={{ color: C.brassDark }}
+            >
+              Go
+            </button>
+            {(minPrice || maxPrice) && (
+              <button
+                type="button"
+                onClick={clearPriceRange}
+                aria-label="Clear price range"
+                style={{ color: C.charcoalSoft }}
+              >
+                <X size={14} />
+              </button>
+            )}
+          </form>
         </div>
 
+        {priceError && (
+          <p className="text-sm mb-4" style={{ color: "#b0413e" }}>{priceError}</p>
+        )}
+
         {/* secondary toggles */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-4 mb-8 mt-4">
           <label className="flex items-center gap-2 text-sm" style={{ color: C.charcoal }}>
             <input
               type="checkbox"
@@ -204,9 +271,9 @@ export default function ListingsPage() {
             />
             Parking
           </label>
-          {(query || type || bedrooms || price || furnished || parking) && (
+          {(query || type || bedrooms || minPrice || maxPrice || furnished || parking) && (
             <button
-              onClick={() => setSearchParams({})}
+              onClick={() => { setPriceError(""); setSearchParams({}); }}
               className="flex items-center gap-1.5 text-sm font-medium ml-auto"
               style={{ color: C.brassDark }}
             >
@@ -239,7 +306,9 @@ export default function ListingsPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {pageItems.map((listing) => (
-              <PropertyCard key={listing._id} listing={listing} />
+              <Link to={`/listings/${listing._id}`} key={listing._id} className="block">
+              <PropertyCard listing={listing} />
+              </Link>
             ))}
           </div>
         )}

@@ -88,7 +88,7 @@ export default function Header() {
             <Link to="/profile">
               {currentUser ? (
                 <img
-                  src={currentUser.avatar}
+                  src={currentUser.avatar.url}
                   alt={currentUser.username}
                   className="w-9 h-9 rounded-full object-cover"
                   style={{ border: `1px solid ${C.brass}` }}
@@ -113,13 +113,18 @@ export default function Header() {
               <li>
                 <Link to="/about" className="text-sm" style={{ color: "#B7C6D3" }}>About</Link>
               </li>
+              <li>
+                <button onClick={handleSignout} className="text-sm cursor-pointer hover:opacity-85 bg-green-800 p-2 rounded transition-colors" style={{ color: "#B7C6D3" }}>
+                  Signout
+                </button>
+              </li>
             </ul>
             <div className="h-px" style={{ backgroundColor: "rgba(92,134,160,0.25)" }} />
             <Link to="/profile" className="flex items-center gap-3">
               {currentUser ? (
                 <>
                   <img
-                    src={currentUser.avatar}
+                    src={currentUser.avatar.url}
                     alt={currentUser.username}
                     className="w-8 h-8 rounded-full object-cover"
                     style={{ border: `1px solid ${C.brass}` }}

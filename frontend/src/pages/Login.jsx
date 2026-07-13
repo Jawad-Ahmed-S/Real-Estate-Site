@@ -105,7 +105,7 @@ export default function Login() {
     
     .then(res =>{
       const data = res.data;
-      if(data.success === true){
+      if (data && (data.success || data.user || data.token)) {
         dispatch(signinSucess(data))
         navigate('/')
         console.log(res);

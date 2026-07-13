@@ -8,6 +8,10 @@ import Login from './pages/Login'
 import Profile from './pages/Profile'
 import PrivateRoute from './components/privateRoute'
 import ListingsPage from './pages/Listing'
+import CreateListing from './pages/createListing'
+import ListingDetail from './pages/listingDetails'
+import MyListings from './pages/myListings'
+import UpdateListing from './pages/updateListing'
 function App() {
   const [count, setCount] = useState(0)
 
@@ -20,6 +24,10 @@ function App() {
             <Route path='/signup' element={<Signup/>}></Route>
             <Route path='/login' element={<Login/>}></Route>
             <Route path='/listings' element={<ListingsPage/>}></Route>
+            <Route path='/mylistings' element={<MyListings/>}></Route>
+            <Route path='/listings/create' element={<CreateListing/>}></Route>
+            <Route path='/listings/update/:id' element={<UpdateListing/>}></Route>
+            <Route path='/listings/:id' element={<ListingDetail/>}></Route>
             <Route path='/about' element={<About/>}></Route>
             <Route element={<PrivateRoute/>}>
               <Route path='/profile' element={<Profile/>}></Route>

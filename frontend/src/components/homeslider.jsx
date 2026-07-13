@@ -1,6 +1,8 @@
 import { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import axios from "axios";
 import PropertyCard from "./PropertyCard";
+import { Link } from "react-router-dom";
 
 const C = {
   charcoal: "#1C2333",
@@ -12,28 +14,43 @@ const C = {
 const fontDisplay = { fontFamily: "'Fraunces', serif" };
 const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
-// TODO: replace with a real GET request, e.g.:
-// const res = await axios.get("http://localhost:8000/api/v1/listings/featured");
-// setListings(res.data.listings);
-const MOCK_LISTINGS = [
-  { id: 1, image: "https://picsum.photos/seed/kk1/600/450", title: "Riverside Terrace House", address: "Clifton, Karachi", price: "PKR 4.2 Cr", type: "Sale", beds: 4, baths: 3, sqft: "2,800", verified: true },
-  { id: 2, image: "https://picsum.photos/seed/kk2/600/450", title: "Garden View Apartment", address: "DHA Phase 6, Karachi", price: "PKR 85,000/mo", type: "Rent", beds: 2, baths: 2, sqft: "1,150", verified: true },
-  { id: 3, image: "https://picsum.photos/seed/kk3/600/450", title: "Modern Corner Bungalow", address: "Bahria Town, Lahore", price: "PKR 3.6 Cr", type: "Sale", beds: 5, baths: 4, sqft: "3,400", verified: false },
-  { id: 4, image: "https://picsum.photos/seed/kk4/600/450", title: "Loft Studio Downtown", address: "F-7, Islamabad", price: "PKR 60,000/mo", type: "Rent", beds: 1, baths: 1, sqft: "620", verified: true },
-  { id: 5, image: "https://picsum.photos/seed/kk5/600/450", title: "Hilltop Family Villa", address: "Gulberg, Lahore", price: "PKR 5.1 Cr", type: "Sale", beds: 6, baths: 5, sqft: "4,100", verified: true },
-  { id: 6, image: "https://picsum.photos/seed/kk6/600/450", title: "Compact City Flat", address: "North Nazimabad, Karachi", price: "PKR 45,000/mo", type: "Rent", beds: 2, baths: 1, sqft: "900", verified: false },
-];
+const API_BASE = "http://localhost:8000/api/v1";
+
+
 
 export default function ListingsSlider() {
   const trackRef = useRef(null);
-  const [listings, setListings] = useState(MOCK_LISTINGS);
+  const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+useEffect(() => {
+  let cancelled = false;
 
-  // TODO: swap this for a real fetch on mount
-  useEffect(() => {
-    // fetchFeaturedListings().then(setListings);
-  }, []);
+  async function fetchFeaturedListings() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await axios.get(`${API_BASE}/listing/featured`);
+      const raw = res.data?.AllListings ?? [];
+      if (!cancelled) {
+        setListings(raw); // pass raw docs straight through, no remapping
+      }
+    } catch (err) {
+      if (!cancelled) {
+        setError(err.message || "Failed to load listings");
+      }
+    } finally {
+      if (!cancelled) setLoading(false);
+    }
+  }
+
+  fetchFeaturedListings();
+  return () => {
+    cancelled = true;
+  };
+}, []);
 
   const updateScrollButtons = () => {
     const el = trackRef.current;
@@ -86,29 +103,47 @@ export default function ListingsSlider() {
           </div>
         </div>
 
-        <div
-          ref={trackRef}
-          onScroll={updateScrollButtons}
-          className="kk-slider-track flex gap-5 overflow-x-auto snap-x snap-mandatory pb-2"
-        >
-          {listings.map((listing) => (
-            <PropertyCard
-              key={listing.id}
-            listing={listing}
-              className="flex-shrink-0 w-[260px] sm:w-[280px] snap-start"
-            />
-          ))}
-        </div>
+        {loading && (
+          <p style={{ ...fontMono, fontSize: 13, color: C.charcoalSoft }}>Loading listings…</p>
+        )}
 
+        {error && !loading && (
+          <p style={{ ...fontMono, fontSize: 13, color: "#B3261E" }}>
+            Couldn't load listings: {error}
+          </p>
+        )}
+
+        {!loading && !error && (
+          <div
+            ref={trackRef}
+            onScroll={updateScrollButtons}
+            className="kk-slider-track flex gap-5 overflow-x-auto snap-x snap-mandatory pb-2"
+          >
+            {console.log("Listings: ",listings)}
+            {listings.map((listing) => (
+              <Link 
+                key={listing._id}
+                to={`/listings/${listing._id}`}>
+              <PropertyCard
+                listing={listing}
+                className="flex-shrink-0 w-[260px] sm:w-[280px] snap-start"
+              />
+              </Link>
+            ))}
+          </div>
+        )}
+
+      
         <div className="flex justify-center mt-8">
-          <a
+          <a 
             href="/listings"
             className="text-sm font-semibold px-5 py-2.5 rounded-sm"
             style={{ border: `1px solid ${C.hair}`, color: C.charcoal }}
           >
             View all listings
-          </a>
+            </a>
         </div>
+
       </div>
     </section>
   );

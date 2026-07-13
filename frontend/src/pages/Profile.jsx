@@ -39,7 +39,7 @@ export default function ProfilePage() {
   const [avatarError, setAvatarError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  const displayedAvatar = avatarPreview || currentUser?.avatar || "";
+  const displayedAvatar = avatarPreview || currentUser?.avatar?.url || "";
 
   // this page can otherwise show a leftover error from a previous
   // action (e.g. a failed sign-in) that's still sitting in the store
@@ -62,7 +62,7 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // basic client-side guardrails — adjust to taste
+    
     if (!file.type.startsWith("image/")) {
       setAvatarError("Please choose an image file.");
       return;
@@ -72,9 +72,10 @@ export default function ProfilePage() {
       return;
     }
 
-    setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
-    setAvatarError("");
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview); 
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+      setAvatarError("");
   };
 
   const handleSubmit = async (e) => {
@@ -95,11 +96,13 @@ export default function ProfilePage() {
         { withCredentials: true }
       );
       const updatedUser = res.data?.user ?? { ...currentUser, ...formData };
+      console.log(updatedUser)
       dispatch(updateUserSuccess(updatedUser));
 
-      setAvatarFile(null);
-      setAvatarPreview(null);
-      setSuccess(true);
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+        setAvatarFile(null);
+        setAvatarPreview(null);
+        setSuccess(true);
     } catch (err) {
       console.log("Update profile error:", err.response?.data || err.message || err);
 

@@ -14,11 +14,11 @@ const listingSchema = new mongoose.Schema(
             type:String,
             required:true
         },
-        regularPrices:{
+        regularPrice:{
             type:Number,
             required:true
         },
-        discountedPrices:{
+        discountedPrice:{
             type:Number,
             required:true
         },
@@ -45,13 +45,12 @@ const listingSchema = new mongoose.Schema(
             message:'Not a valid option. Select from "sell" or "rent" '
         },
         offer:{
-            type:Number,
+            type:String,
             required:true
         },
-        imageUrls:{
-            type:Array,
-            required:true
-        },
+        imageUrls: [
+            { url: { type: String, required: true }, public_id: { type: String, required: true } }
+        ],
         owner:{
             type:Schema.Types.ObjectId,
             ref:'User',

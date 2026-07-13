@@ -1,4 +1,4 @@
-import { BedDouble, Bath, Sofa, Car, MapPin, Tag } from "lucide-react";
+import { BedDouble, Bath, Sofa, Car, MapPin, Tag, Dice1 } from "lucide-react";
 
 const C = {
   charcoal: "#1C2333",
@@ -13,20 +13,19 @@ const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 const formatPKR = (n) =>
   typeof n === "number" ? `PKR ${n.toLocaleString("en-PK")}` : "—";
 
-// listing shape — matches the Listing mongoose schema directly:
-// { _id, name, description, address, regularPrices, discountedPrices,
-//   bedrooms, bathrooms, furnished, parking, type: 'sell' | 'rent',
-//   offer, imageUrls: [], owner, createdAt }
+
 
 export default function PropertyCard({ listing, className = "" }) {
-  const {
-    imageUrls, name, address, regularPrices, discountedPrices,
+  let {
+    imageUrls, name, address, regularPrice, discountedPrice,
     bedrooms, bathrooms, furnished, parking, type, offer,
   } = listing;
 
+  console.log("Listing in card:",listing)
   const hasOffer = Number(offer) > 0;
-  const displayPrice = hasOffer ? discountedPrices : regularPrices;
-
+  
+  const displayPrice = discountedPrice;
+  
   return (
     <div
       className={`group rounded-sm overflow-hidden cursor-pointer transition-shadow hover:shadow-lg ${className}`}
@@ -34,7 +33,7 @@ export default function PropertyCard({ listing, className = "" }) {
     >
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
-          src={imageUrls?.[0] || "https://placehold.co/600x450/16273D/9FB3C4?text=No+Photo"}
+          src={imageUrls?.[0]?.url || "https://placehold.co/600x450/16273D/9FB3C4?text=No+Photo"}
           alt={name}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
@@ -63,7 +62,7 @@ export default function PropertyCard({ listing, className = "" }) {
           </p>
           {hasOffer && (
             <p className="text-xs line-through" style={{ color: "#9FB3C4" }}>
-              {formatPKR(regularPrices)}
+              {formatPKR(regularPrice)}
             </p>
           )}
         </div>
