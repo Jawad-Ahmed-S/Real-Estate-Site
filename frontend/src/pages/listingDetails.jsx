@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 import {
   BedDouble, Bath, Sofa, Car, MapPin, Tag, Loader2, AlertCircle, Pencil, Trash2,
-  Send, CheckCircle2,
+  Send, CheckCircle2, CalendarClock, Heart,
 } from "lucide-react";
 import Header from "../components/header";
 
@@ -21,6 +21,8 @@ const C = {
 };
 const fontDisplay = { fontFamily: "'Fraunces', serif" };
 const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
+
+const WISHLIST_BASE_URL = "http://localhost:8000/api/v1/wishlist";
 
 const formatPKR = (n) => (typeof n === "number" ? `PKR ${n.toLocaleString("en-PK")}` : "—");
 
@@ -40,6 +42,16 @@ export default function ListingDetail() {
   const [inquirySending, setInquirySending] = useState(false);
   const [inquiryError, setInquiryError] = useState("");
   const [inquirySent, setInquirySent] = useState(false);
+
+  const [proposedDateTime, setProposedDateTime] = useState("");
+  const [appointmentSending, setAppointmentSending] = useState(false);
+  const [appointmentError, setAppointmentError] = useState("");
+  const [appointmentSent, setAppointmentSent] = useState(false);
+
+  const [wishlisted, setWishlisted] = useState(false);
+  const [wishlistId, setWishlistId] = useState(null);
+  const [wishlistBusy, setWishlistBusy] = useState(false);
+  const [wishlistError, setWishlistError] = useState("");
 
   useEffect(() => {
     let ignore = false;
@@ -64,6 +76,34 @@ export default function ListingDetail() {
     fetchListing();
     return () => { ignore = true; };
   }, [id]);
+
+  // check whether this listing is already saved, so the button reflects the right state
+  useEffect(() => {
+    if (!currentUser) {
+      setWishlisted(false);
+      setWishlistId(null);
+      return;
+    }
+    let ignore = false;
+    const fetchWishlistStatus = async () => {
+      try {
+        const res = await axios.get(`${WISHLIST_BASE_URL}/`, { withCredentials: true });
+        const favourites = res.data?.favourites || [];
+        const match = favourites.find((fav) => {
+          const listingId = typeof fav.listing === "string" ? fav.listing : fav.listing?._id;
+          return listingId === id;
+        });
+        if (!ignore) {
+          setWishlisted(Boolean(match));
+          setWishlistId(match?._id || null);
+        }
+      } catch (err) {
+        console.log("Fetch wishlist status error:", err.response?.data || err.message);
+      }
+    };
+    fetchWishlistStatus();
+    return () => { ignore = true; };
+  }, [currentUser, id]);
 
   const ownerId =
     typeof listing?.owner === "string" ? listing.owner : listing?.owner?._id;
@@ -107,6 +147,53 @@ export default function ListingDetail() {
       setInquiryError(err.response?.data?.message || "Couldn't send your message right now.");
     } finally {
       setInquirySending(false);
+    }
+  };
+
+  const handleRequestAppointment = async (e) => {
+    e.preventDefault();
+    setAppointmentError("");
+    setAppointmentSending(true);
+    try {
+      
+      await axios.post(
+        "http://localhost:8000/api/v1/appointment/create",
+        { listingId: id, proposedDateTime },
+        { withCredentials: true }
+      );
+      setAppointmentSent(true);
+      setProposedDateTime("");
+    } catch (err) {
+      console.log("Request appointment error:", err.response?.data || err.message);
+      setAppointmentError(err.response?.data?.message || "Couldn't send that request right now.");
+    } finally {
+      setAppointmentSending(false);
+    }
+  };
+
+  const handleToggleWishlist = async () => {
+    if (!currentUser) return;
+    setWishlistBusy(true);
+    setWishlistError("");
+    try {
+      if (wishlistId) {
+        await axios.delete(`${WISHLIST_BASE_URL}/${wishlistId}`, { withCredentials: true });
+        setWishlisted(false);
+        setWishlistId(null);
+      } else {
+        const res = await axios.post(
+          `${WISHLIST_BASE_URL}/mark`,
+          { listingId: id },
+          { withCredentials: true }
+        );
+        setWishlisted(true);
+        setWishlistId(res.data?.wishlist?._id || null);
+      }
+    } catch (err) {
+      console.log("Wishlist toggle error:", err.response?.data || err.message);
+      setWishlistError(err.response?.data?.message || "Couldn't update your wishlist right now.");
+    } finally {
+      setWishlistBusy(false);
     }
   };
 
@@ -187,7 +274,7 @@ export default function ListingDetail() {
           )}
         </div>
 
-        {/* header row: title + owner actions */}
+        {/* header row: title + owner actions / wishlist */}
         <div className="flex items-start justify-between gap-4 mb-2">
           <div>
             <h1 style={{ ...fontDisplay, fontWeight: 500, fontSize: 28, color: C.charcoal }}>{name}</h1>
@@ -196,32 +283,59 @@ export default function ListingDetail() {
             </p>
           </div>
 
-          {/* only the listing owner ever sees these */}
-          {isOwner && (
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Link
-                to={`/listings/update/${id}`}
-                className="flex items-center cursor-pointer hover:opacity-90 gap-1.5 text-sm font-medium px-3 py-2 rounded-sm"
-                style={{ border: `1px solid ${C.hair}`, color: C.charcoal }}
-              >
-                <Pencil size={14} /> Edit
-              </Link>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* only the listing owner ever sees these */}
+            {isOwner && (
+              <>
+                <Link
+                  to={`/listings/update/${id}`}
+                  className="flex items-center cursor-pointer hover:opacity-90 gap-1.5 text-sm font-medium px-3 py-2 rounded-sm"
+                  style={{ border: `1px solid ${C.hair}`, color: C.charcoal }}
+                >
+                  <Pencil size={14} /> Edit
+                </Link>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="flex items-center gap-1.5 cursor-pointer hover:opacity-90 text-sm font-medium px-3 py-2 rounded-sm disabled:opacity-50"
+                  style={{ border: `1px solid ${C.error}`, color: C.error }}
+                >
+                  {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                  {deleting ? "Deleting..." : "Delete"}
+                </button>
+              </>
+            )}
+
+            {/* saving to wishlist doesn't make sense for your own listing */}
+            {!isOwner && currentUser && (
               <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="flex items-center gap-1.5 cursor-pointer hover:opacity-90 text-sm font-medium px-3 py-2 rounded-sm disabled:opacity-50"
-                style={{ border: `1px solid ${C.error}`, color: C.error }}
+                onClick={handleToggleWishlist}
+                disabled={wishlistBusy}
+                className="flex items-center gap-1.5 cursor-pointer hover:opacity-90 text-sm font-medium px-3 py-2 rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  border: `1px solid ${wishlisted ? C.brassDark : C.hair}`,
+                  color: wishlisted ? C.brassDark : C.charcoal,
+                }}
               >
-                {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                {deleting ? "Deleting..." : "Delete"}
+                {wishlistBusy ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Heart size={14} fill={wishlisted ? C.brassDark : "none"} />
+                )}
+                {wishlisted ? "Saved" : "Save"}
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         {deleteError && (
           <p className="flex items-center gap-1.5 text-xs mb-4" style={{ color: C.error }}>
             <AlertCircle size={13} /> {deleteError}
+          </p>
+        )}
+        {wishlistError && (
+          <p className="flex items-center gap-1.5 text-xs mb-4" style={{ color: C.error }}>
+            <AlertCircle size={13} /> {wishlistError}
           </p>
         )}
 
@@ -287,6 +401,48 @@ export default function ListingDetail() {
                 >
                   {inquirySending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
                   {inquirySending ? "Sending..." : "Send inquiry"}
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+
+        {/* request a viewing — same visibility rule as the inquiry form */}
+        {!isOwner && currentUser && (
+          <div className="rounded-sm p-6 mt-4" style={{ backgroundColor: "#fff", border: `1px solid ${C.hair}` }}>
+            <h2 style={{ ...fontDisplay, fontWeight: 500, fontSize: 18, color: C.charcoal }} className="mb-4 flex items-center gap-2">
+              <CalendarClock size={18} color={C.brassDark} /> Request a viewing
+            </h2>
+
+            {appointmentSent ? (
+              <p className="flex items-center gap-2 text-sm" style={{ color: "#5E7A63" }}>
+                <CheckCircle2 size={16} /> Your request has been sent — the owner will confirm or decline it.
+              </p>
+            ) : (
+              <form onSubmit={handleRequestAppointment}>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: C.charcoal }}>Proposed date &amp; time</label>
+                <input
+                  type="datetime-local"
+                  value={proposedDateTime}
+                  onChange={(e) => setProposedDateTime(e.target.value)}
+                  min={new Date().toISOString().slice(0, 16)}
+                  required
+                  className="w-full text-sm rounded-sm px-3 py-2.5 outline-none mb-3"
+                  style={{ border: `1px solid ${C.hair}`, color: C.charcoal }}
+                />
+                {appointmentError && (
+                  <p className="flex items-center gap-1.5 text-xs mb-3" style={{ color: C.error }}>
+                    <AlertCircle size={13} /> {appointmentError}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  disabled={appointmentSending}
+                  className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-sm cursor-pointer transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: C.brassDark, color: C.paper }}
+                >
+                  {appointmentSending ? <Loader2 size={15} className="animate-spin" /> : <CalendarClock size={15} />}
+                  {appointmentSending ? "Sending..." : "Request appointment"}
                 </button>
               </form>
             )}

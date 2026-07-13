@@ -1,4 +1,4 @@
-import { BedDouble, Bath, Sofa, Car, MapPin, Tag, Dice1 } from "lucide-react";
+import { BedDouble, Bath, Sofa, Car, MapPin, Tag, Heart, Loader2 } from "lucide-react";
 
 const C = {
   charcoal: "#1C2333",
@@ -15,7 +15,13 @@ const formatPKR = (n) =>
 
 
 
-export default function PropertyCard({ listing, className = "" }) {
+export default function PropertyCard({
+  listing,
+  className = "",
+  isWishlisted = false,
+  onToggleWishlist,
+  wishlistBusy = false,
+}) {
   let {
     imageUrls, name, address, regularPrice, discountedPrice,
     bedrooms, bathrooms, furnished, parking, type, offer,
@@ -25,6 +31,13 @@ export default function PropertyCard({ listing, className = "" }) {
   const hasOffer = Number(offer) > 0;
   
   const displayPrice = discountedPrice;
+
+  const handleWishlistClick = (e) => {
+    // card is usually wrapped in a <Link>, so stop that navigation from firing
+    e.preventDefault();
+    e.stopPropagation();
+    if (!wishlistBusy) onToggleWishlist?.();
+  };
   
   return (
     <div
@@ -43,10 +56,29 @@ export default function PropertyCard({ listing, className = "" }) {
         >
           For {type === "rent" ? "Rent" : "Sale"}
         </span>
+
+        {onToggleWishlist && (
+          <button
+            type="button"
+            onClick={handleWishlistClick}
+            disabled={wishlistBusy}
+            aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+            title={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+            className="absolute top-3 right-3 flex items-center justify-center w-7 h-7 rounded-full cursor-pointer transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{ backgroundColor: "rgba(15,26,43,0.85)" }}
+          >
+            {wishlistBusy ? (
+              <Loader2 size={13} className="animate-spin" color={C.paper} />
+            ) : (
+              <Heart size={14} color={C.paper} fill={isWishlisted ? C.paper : "none"} />
+            )}
+          </button>
+        )}
+
         {hasOffer && (
           <span
-            className="absolute top-3 right-3 flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-sm"
-            style={{ backgroundColor: "rgba(15,26,43,0.85)", color: C.paper }}
+            className="absolute right-3 flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-sm"
+            style={{ top: onToggleWishlist ? 44 : 12, backgroundColor: "rgba(15,26,43,0.85)", color: C.paper }}
           >
             <Tag size={12} />
             Offer

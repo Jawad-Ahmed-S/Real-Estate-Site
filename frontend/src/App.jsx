@@ -13,6 +13,8 @@ import ListingDetail from './pages/listingDetails'
 import MyListings from './pages/myListings'
 import UpdateListing from './pages/updateListing'
 import InquiriesPage from './pages/inquiryPage'
+import AppointmentsPage from './pages/appointmentPage'
+import WishlistPage from './pages/wishlistPage'
 function App() {
   const [count, setCount] = useState(0)
 
@@ -31,6 +33,8 @@ function App() {
             <Route path='/listings/:id' element={<ListingDetail/>}></Route>
             <Route path='/about' element={<About/>}></Route>
             <Route path='/inquiries' element={<InquiriesPage/>}></Route>
+            <Route path='/wishlist' element={<WishlistPage/>}></Route>
+            <Route path='/appointments' element={<AppointmentsPage/>}></Route>
             <Route element={<PrivateRoute/>}>
               <Route path='/profile' element={<Profile/>}></Route>
             </Route>

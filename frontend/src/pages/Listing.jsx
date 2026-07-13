@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, SlidersHorizontal, Loader2, X } from "lucide-react";
+import { useSelector } from "react-redux";
+import { Search, SlidersHorizontal, Loader2, X, Heart } from "lucide-react";
 import axios from "axios";
 import Header from "../components/header";
 import PropertyCard from "../components/propertyCArd";
@@ -18,6 +19,7 @@ const fontDisplay = { fontFamily: "'Fraunces', serif" };
 const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
 const PAGE_SIZE = 9;
+const WISHLIST_BASE_URL = "http://localhost:8000/api/v1/wishlist";
 
 function buildQueryParams(searchParams) {
   const params = {};
@@ -44,10 +46,14 @@ function buildQueryParams(searchParams) {
 
 export default function ListingsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { currentUser } = useSelector((state) => state.user);
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [priceError, setPriceError] = useState("");
+
+  const [wishlist, setWishlist] = useState([]);
+  const [wishlistBusyId, setWishlistBusyId] = useState(null);
 
   const query = searchParams.get("keyword") || "";
   const type = searchParams.get("type") || "";
@@ -85,6 +91,55 @@ export default function ListingsPage() {
     fetchListings();
     return () => { ignore = true; controller.abort(); };
   }, [searchParams.toString()]);
+
+  // pull the signed-in user's wishlist once, so every card can show its saved state
+  // without firing one request per card
+  useEffect(() => {
+    if (!currentUser) {
+      setWishlist([]);
+      return;
+    }
+    let ignore = false;
+    const fetchWishlist = async () => {
+      try {
+        const res = await axios.get(`${WISHLIST_BASE_URL}/`, { withCredentials: true });
+        if (!ignore) setWishlist(res.data?.favourites || []);
+      } catch (err) {
+        console.log("Fetch wishlist error:", err.response?.data || err.message);
+      }
+    };
+    fetchWishlist();
+    return () => { ignore = true; };
+  }, [currentUser]);
+
+  const wishlistMap = useMemo(() => {
+    const map = {};
+    wishlist.forEach((fav) => {
+      const listingId = typeof fav.listing === "string" ? fav.listing : fav.listing?._id;
+      if (listingId) map[listingId] = fav._id;
+    });
+    return map;
+  }, [wishlist]);
+
+  const handleToggleWishlist = async (listingId) => {
+    if (!currentUser) return;
+    const existingFavouriteId = wishlistMap[listingId];
+    setWishlistBusyId(listingId);
+    try {
+      if (existingFavouriteId) {
+        await axios.delete(`${WISHLIST_BASE_URL}/${existingFavouriteId}`, { withCredentials: true });
+        setWishlist((prev) => prev.filter((fav) => fav._id !== existingFavouriteId));
+      } else {
+        const res = await axios.post(`${WISHLIST_BASE_URL}/mark`, { listingId }, { withCredentials: true });
+        const created = res.data?.wishlist;
+        if (created) setWishlist((prev) => [...prev, created]);
+      }
+    } catch (err) {
+      console.log("Wishlist toggle error:", err.response?.data || err.message);
+    } finally {
+      setWishlistBusyId(null);
+    }
+  };
 
   const totalPages = Math.ceil(listings.length / PAGE_SIZE) || 1;
   const pageItems = listings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -149,13 +204,24 @@ export default function ListingsPage() {
             All listings
           </h1>
 
-          <Link
-            to="/myListings"
-            className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-sm"
-            style={{ backgroundColor: C.brassDark, color: C.paper }}
-          >
-            My listings
-          </Link>
+          <div className="flex items-center gap-3">
+            {currentUser && (
+              <Link
+                to="/wishlist"
+                className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-sm"
+                style={{ border: `1px solid ${C.hair}`, color: C.charcoal }}
+              >
+                <Heart size={14} /> Wishlist
+              </Link>
+            )}
+            <Link
+              to="/myListings"
+              className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-sm"
+              style={{ backgroundColor: C.brassDark, color: C.paper }}
+            >
+              My listings
+            </Link>
+          </div>
         </div>
 
         {/* filter bar */}
@@ -307,7 +373,12 @@ export default function ListingsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {pageItems.map((listing) => (
               <Link to={`/listings/${listing._id}`} key={listing._id} className="block">
-              <PropertyCard listing={listing} />
+                <PropertyCard
+                  listing={listing}
+                  isWishlisted={Boolean(wishlistMap[listing._id])}
+                  wishlistBusy={wishlistBusyId === listing._id}
+                  onToggleWishlist={currentUser ? () => handleToggleWishlist(listing._id) : undefined}
+                />
               </Link>
             ))}
           </div>

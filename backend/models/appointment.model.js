@@ -2,12 +2,12 @@ import mongoose, { Schema } from "mongoose";
 
 const appointmentSchema = new mongoose.Schema(
     {
-        sender:{
+        buyer:{
             type:Schema.Types.ObjectId,
             ref:'User',
             required:true
         },
-        reciever:{
+        owner:{
             type:Schema.Types.ObjectId,
             ref:'User',
             required:true
@@ -17,13 +17,19 @@ const appointmentSchema = new mongoose.Schema(
             ref:'Listing',
             required:true
         },
-        message:{
-            type:String,
+        proposedDateTime:{
+            type:Date,
             required:true
+        },
+        status:{
+            type:String,
+            enum:['pending','confirmed','rejected','completed'],
+            default:'pending',
+            message:"Not a valid option. Select from `confirmed` or `rejected`"
         }
     },{timestamps:true}
 )
 
 
 const Appointment = mongoose.model('Appointment',appointmentSchema)
-export default Inquiry;
+export default Appointment;

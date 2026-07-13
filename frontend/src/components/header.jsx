@@ -59,10 +59,12 @@ export default function Header() {
         }}
       >
         <div className="max-w-6xl mx-auto px-6 md:px-10 flex items-center justify-between h-20">
-          <div className="flex items-center gap-2.5" style={{ ...fontDisplay, fontWeight: 600, fontSize: 19, color: C.paper }}>
-            <span className="w-2.5 h-2.5 rotate-45 inline-block" style={{ backgroundColor: C.brass }} />
-            KEYSTONE
-          </div>
+            <Link to='/' className="cursor-pointer">
+              <div className="flex items-center gap-2.5" style={{ ...fontDisplay, fontWeight: 600, fontSize: 19, color: C.paper }}>
+                <span className="w-2.5 h-2.5 rotate-45 inline-block" style={{ backgroundColor: C.brass }} />
+                KEYSTONE
+              </div>
+            </Link>
 
           <nav className="hidden md:flex items-center">
             <ul className="flex items-center gap-8">
@@ -74,6 +76,16 @@ export default function Header() {
               <li>
                 <Link to="/listings" className="text-sm transition-colors" style={{ color: "#B7C6D3" }}>
                   Listings
+                </Link>
+              </li>
+              <li>
+                <Link to="/inquiries" className="text-sm transition-colors" style={{ color: "#B7C6D3" }}>
+                  Inquiries
+                </Link>
+              </li>
+              <li>
+                <Link to="/appointments" className="text-sm transition-colors" style={{ color: "#B7C6D3" }}>
+                  Appointments
                 </Link>
               </li>
               <li>
@@ -112,6 +124,17 @@ export default function Header() {
               </li>
               <li>
                 <Link to="/about" className="text-sm" style={{ color: "#B7C6D3" }}>About</Link>
+              </li>
+              
+              <li>
+                <Link to="/inquiries" className="text-sm transition-colors" style={{ color: "#B7C6D3" }}>
+                  Inquiries
+                </Link>
+              </li>
+              <li>
+                <Link to="/appointments" className="text-sm transition-colors" style={{ color: "#B7C6D3" }}>
+                  Appointments
+                </Link>
               </li>
               <li>
                 <button onClick={handleSignout} className="text-sm cursor-pointer hover:opacity-85 bg-green-800 p-2 rounded transition-colors" style={{ color: "#B7C6D3" }}>
