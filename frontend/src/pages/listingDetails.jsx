@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 import {
   BedDouble, Bath, Sofa, Car, MapPin, Tag, Loader2, AlertCircle, Pencil, Trash2,
+  Send, CheckCircle2,
 } from "lucide-react";
 import Header from "../components/header";
 
@@ -34,6 +35,11 @@ export default function ListingDetail() {
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+
+  const [inquiryMessage, setInquiryMessage] = useState("");
+  const [inquirySending, setInquirySending] = useState(false);
+  const [inquiryError, setInquiryError] = useState("");
+  const [inquirySent, setInquirySent] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -81,6 +87,26 @@ export default function ListingDetail() {
         setDeleteError(err.response?.data?.message || "Couldn't delete this listing right now.");
       }
       setDeleting(false);
+    }
+  };
+
+  const handleSendInquiry = async (e) => {
+    e.preventDefault();
+    setInquiryError("");
+    setInquirySending(true);
+    try {
+      await axios.post(
+        "http://localhost:8000/api/v1/inquiry/create",
+        { listingId: id, message: inquiryMessage },
+        { withCredentials: true }
+      );
+      setInquirySent(true);
+      setInquiryMessage("");
+    } catch (err) {
+      console.log("Send inquiry error:", err.response?.data || err.message);
+      setInquiryError(err.response?.data?.message || "Couldn't send your message right now.");
+    } finally {
+      setInquirySending(false);
     }
   };
 
@@ -220,7 +246,52 @@ export default function ListingDetail() {
           {parking && <span className="flex items-center gap-1.5"><Car size={14} /> Parking</span>}
         </div>
 
-        <p className="text-sm leading-relaxed" style={{ color: C.charcoal }}>{description}</p>
+        <p className="text-sm leading-relaxed mb-8" style={{ color: C.charcoal }}>{description}</p>
+
+        {/* contact the owner — never shown to the owner themselves */}
+        {!isOwner && (
+          <div className="rounded-sm p-6" style={{ backgroundColor: "#fff", border: `1px solid ${C.hair}` }}>
+            <h2 style={{ ...fontDisplay, fontWeight: 500, fontSize: 18, color: C.charcoal }} className="mb-4">
+              Contact the owner
+            </h2>
+
+            {!currentUser ? (
+              <p className="text-sm" style={{ color: C.charcoalSoft }}>
+                <Link to="/login" className="font-medium" style={{ color: C.brassDark }}>Sign in</Link> to send an inquiry about this listing.
+              </p>
+            ) : inquirySent ? (
+              <p className="flex items-center gap-2 text-sm" style={{ color: "#5E7A63" }}>
+                <CheckCircle2 size={16} /> Your message has been sent to the owner.
+              </p>
+            ) : (
+              <form onSubmit={handleSendInquiry}>
+                <textarea
+                  value={inquiryMessage}
+                  onChange={(e) => setInquiryMessage(e.target.value)}
+                  required
+                  rows={4}
+                  placeholder="Hi, I'm interested in this property — is it still available?"
+                  className="w-full text-sm rounded-sm px-3 py-2.5 outline-none resize-none mb-3"
+                  style={{ border: `1px solid ${C.hair}`, color: C.charcoal }}
+                />
+                {inquiryError && (
+                  <p className="flex items-center gap-1.5 text-xs mb-3" style={{ color: C.error }}>
+                    <AlertCircle size={13} /> {inquiryError}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  disabled={inquirySending}
+                  className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-sm disabled:opacity-60"
+                  style={{ backgroundColor: C.brassDark, color: C.paper }}
+                >
+                  {inquirySending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+                  {inquirySending ? "Sending..." : "Send inquiry"}
+                </button>
+              </form>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

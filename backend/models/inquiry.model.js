@@ -7,7 +7,7 @@ const inquirySchema = new mongoose.Schema(
             ref:'User',
             required:true
         },
-        reciever:{
+        reciever:{ 
             type:Schema.Types.ObjectId,
             ref:'User',
             required:true

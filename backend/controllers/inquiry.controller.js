@@ -33,7 +33,7 @@ export const getMySentInquiries = catchAsyncError(async(req,res,next)=>{
         sender:userId
     })
     .populate('listing', 'name address')
-    .populate('reciever','name')
+    .populate('reciever','firstName lastName')
     .sort({createdAt:-1});
     console.log(myInquiries)
 
@@ -68,7 +68,7 @@ export const getRecievedInquiries = catchAsyncError(async(req,res,next)=>{
         reciever:userId
     })
     .populate('listing', 'name address')
-    .populate('sender','name')
+    .populate('sender','firstName lastName')
     .sort({createdAt:-1});
     console.log(myInquiries)
 

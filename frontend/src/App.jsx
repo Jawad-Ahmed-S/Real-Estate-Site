@@ -12,6 +12,7 @@ import CreateListing from './pages/createListing'
 import ListingDetail from './pages/listingDetails'
 import MyListings from './pages/myListings'
 import UpdateListing from './pages/updateListing'
+import InquiriesPage from './pages/inquiryPage'
 function App() {
   const [count, setCount] = useState(0)
 
@@ -29,6 +30,7 @@ function App() {
             <Route path='/listings/update/:id' element={<UpdateListing/>}></Route>
             <Route path='/listings/:id' element={<ListingDetail/>}></Route>
             <Route path='/about' element={<About/>}></Route>
+            <Route path='/inquiries' element={<InquiriesPage/>}></Route>
             <Route element={<PrivateRoute/>}>
               <Route path='/profile' element={<Profile/>}></Route>
             </Route>

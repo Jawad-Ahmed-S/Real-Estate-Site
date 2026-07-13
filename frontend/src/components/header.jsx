@@ -19,7 +19,7 @@ export default function Header() {
   const navigate = useNavigate();
 
   const handleSignout =async ()=>{
-      const res = await axios.post(`http://localhost:8000/api/v1/user/logout`,{withCredentials:true})
+      const res = await axios.post(`http://localhost:8000/api/v1/user/logout`,{},{withCredentials:true})
       .then(res =>{
             const data = res.data;
             if(data.success === true){
@@ -88,7 +88,7 @@ export default function Header() {
             <Link to="/profile">
               {currentUser ? (
                 <img
-                  src={currentUser.avatar.url}
+                  src={currentUser.avatar?.url || ""}
                   alt={currentUser.username}
                   className="w-9 h-9 rounded-full object-cover"
                   style={{ border: `1px solid ${C.brass}` }}
@@ -124,7 +124,7 @@ export default function Header() {
               {currentUser ? (
                 <>
                   <img
-                    src={currentUser.avatar.url}
+                    src={currentUser.avatar?.url || ""}
                     alt={currentUser.username}
                     className="w-8 h-8 rounded-full object-cover"
                     style={{ border: `1px solid ${C.brass}` }}
