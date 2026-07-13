@@ -20,7 +20,7 @@ const C = {
 const fontDisplay = { fontFamily: "'Fraunces', serif" };
 const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
-const BASE_URL = "http://localhost:8000/api/v1/listing";
+const BASE_URL = `${import.meta.env.VITE_API_ROUTE}/api/v1/listing`;
 const MAX_IMAGES = 10;
 const MAX_SIZE = 5 * 1024 * 1024;
 

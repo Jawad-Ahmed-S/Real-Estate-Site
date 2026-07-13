@@ -32,9 +32,7 @@ export default function ProfilePage() {
   });
 
   const [avatarFile, setAvatarFile] = useState(null);
-  // avatarPreview only ever holds a local blob URL for an unsaved selection.
-  // Once a real avatar exists, it always comes from currentUser.avatar (redux),
-  // never from local state — that's the single source of truth after save.
+  
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarError, setAvatarError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -91,7 +89,7 @@ export default function ProfilePage() {
       if (avatarFile) payload.append("avatar", avatarFile);
 
       const res = await axios.put(
-        `http://localhost:8000/api/v1/user/update`,
+        `${import.meta.env.VITE_API_ROUTE}/api/v1/user/update`,
         payload,
         { withCredentials: true }
       );

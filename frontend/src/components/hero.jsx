@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, MapPin, ChevronDown } from "lucide-react";
 
 const C = {
@@ -47,6 +48,27 @@ function Skyline() {
 
 export default function Hero() {
   const [tab, setTab] = useState("buy");
+  const [keyword, setKeyword] = useState("");
+  const [bedrooms, setBedrooms] = useState("");
+  const [showPrice, setShowPrice] = useState(false);
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const navigate = useNavigate();
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const params = new URLSearchParams();
+
+    if (keyword.trim()) params.set("keyword", keyword.trim());
+    params.set("type", tab === "buy" ? "sell" : "rent");
+    if (bedrooms) params.set("bedrooms", bedrooms);
+    if (minPrice) params.set("minPrice", minPrice);
+    if (maxPrice) params.set("maxPrice", maxPrice);
+    params.set("page", "1");
+
+    setShowPrice(false);
+    navigate(`/listings?${params.toString()}`);
+  };
 
   return (
     <div className="relative overflow-hidden" style={{ backgroundColor: C.ink }}>
@@ -96,11 +118,12 @@ export default function Hero() {
             </p>
 
             {/* search card */}
-            <div className="rounded-sm p-5" style={{ backgroundColor: C.paper, border: `1px solid ${C.hair}` }}>
+            <form onSubmit={handleSearch} className="rounded-sm p-5" style={{ backgroundColor: C.paper, border: `1px solid ${C.hair}` }}>
               <div className="flex gap-1 mb-4">
                 {["buy", "rent"].map((t) => (
                   <button
                     key={t}
+                    type="button"
                     onClick={() => setTab(t)}
                     className="text-xs font-semibold px-4 py-2 rounded-sm capitalize transition-colors"
                     style={{
@@ -116,6 +139,8 @@ export default function Hero() {
               <div className="flex items-center gap-2 rounded-sm px-3 mb-3" style={{ border: `1px solid ${C.hair}` }}>
                 <MapPin size={16} color={C.charcoalSoft} />
                 <input
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
                   placeholder="City, neighbourhood, or address"
                   className="w-full py-2.5 text-sm outline-none bg-transparent"
                   style={{ color: C.charcoal }}
@@ -123,28 +148,75 @@ export default function Hero() {
               </div>
 
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <button className="flex items-center justify-between text-sm px-3 py-2.5 rounded-sm" style={{ border: `1px solid ${C.hair}`, color: C.charcoal }}>
-                  Property type <ChevronDown size={15} color={C.charcoalSoft} />
-                </button>
-                <button className="flex items-center justify-between text-sm px-3 py-2.5 rounded-sm" style={{ border: `1px solid ${C.hair}`, color: C.charcoal }}>
-                  Price range <ChevronDown size={15} color={C.charcoalSoft} />
-                </button>
+                <div className="relative">
+                  <select
+                    value={bedrooms}
+                    onChange={(e) => setBedrooms(e.target.value)}
+                    className="w-full appearance-none text-sm px-3 py-2.5 rounded-sm outline-none"
+                    style={{ border: `1px solid ${C.hair}`, color: C.charcoal, backgroundColor: "#fff" }}
+                  >
+                    <option value="">Any bedrooms</option>
+                    <option value="1">1 bed</option>
+                    <option value="2">2 beds</option>
+                    <option value="3">3 beds</option>
+                    <option value="4">4 beds</option>
+                  </select>
+                  <ChevronDown
+                    size={15}
+                    color={C.charcoalSoft}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2"
+                  />
+                </div>
+
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowPrice((s) => !s)}
+                    className="w-full flex items-center justify-between text-sm px-3 py-2.5 rounded-sm"
+                    style={{ border: `1px solid ${C.hair}`, color: C.charcoal }}
+                  >
+                    {minPrice || maxPrice ? `PKR ${minPrice || "0"}–${maxPrice || "∞"}` : "Price range"}
+                    <ChevronDown size={15} color={C.charcoalSoft} />
+                  </button>
+
+                  {showPrice && (
+                    <div
+                      className="absolute z-20 top-full mt-2 left-0 right-0 p-3 rounded-sm flex items-center gap-2"
+                      style={{ backgroundColor: "#fff", border: `1px solid ${C.hair}` }}
+                    >
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="Min"
+                        value={minPrice}
+                        onChange={(e) => setMinPrice(e.target.value)}
+                        className="w-full text-sm px-2 py-2 rounded-sm outline-none"
+                        style={{ border: `1px solid ${C.hair}`, color: C.charcoal }}
+                      />
+                      <span style={{ color: C.charcoalSoft }}>–</span>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="Max"
+                        value={maxPrice}
+                        onChange={(e) => setMaxPrice(e.target.value)}
+                        className="w-full text-sm px-2 py-2 rounded-sm outline-none"
+                        style={{ border: `1px solid ${C.hair}`, color: C.charcoal }}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <button
+                type="submit"
                 className="w-full flex items-center justify-center gap-2 rounded-sm py-3 text-sm font-semibold"
                 style={{ backgroundColor: C.brassDark, color: C.paper }}
               >
                 <Search size={16} />
                 Search listings
               </button>
-            </div>
-
-            <div className="flex gap-8 mt-8 uppercase" style={{ ...fontMono, fontSize: 10.5, letterSpacing: "0.06em", color: C.lineDim }}>
-              <span><b style={{ color: C.line }}>12,400+</b> Listings</span>
-              <span><b style={{ color: C.line }}>340</b> Cities</span>
-              <span><b style={{ color: C.line }}>98%</b> Verified</span>
-            </div>
+            </form>
           </div>
 
           {/* skyline scene */}

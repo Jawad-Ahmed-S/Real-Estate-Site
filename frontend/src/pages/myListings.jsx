@@ -20,8 +20,8 @@ const C = {
 const fontDisplay = { fontFamily: "'Fraunces', serif" };
 const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
-const BASE_URL = "http://localhost:8000/api/v1/listing/my-listings";
-const BASE_DELETE_URL = "http://localhost:8000/api/v1/listing";
+const BASE_URL = `${import.meta.env.VITE_API_ROUTE}/api/v1/listing/my-listings`;
+const BASE_DELETE_URL = `${import.meta.env.VITE_API_ROUTE}/api/v1/listing`;
 
 const formatPKR = (n) => (typeof n === "number" ? `PKR ${n.toLocaleString("en-PK")}` : "—");
 

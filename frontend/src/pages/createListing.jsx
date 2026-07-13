@@ -150,7 +150,7 @@ export default function CreateListing() {
       payload.append("offer", formData.offer);
       newFiles.forEach((file) => payload.append("images", file));
 
-      const res = await axios.post("http://localhost:8000/api/v1/listing/create", payload, {
+      const res = await axios.post(`${import.meta.env.VITE_API_ROUTE}/api/v1/listing/create`, payload, {
         withCredentials: true,
       });
 

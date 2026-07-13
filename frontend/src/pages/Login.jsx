@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Home, Building2, UserRound, Eye, EyeOff } from "lucide-react";
 import axios from 'axios'
-import { useNavigate } from "react-router-dom";
+import { useNavigate,Link } from "react-router-dom";
 import {useDispatch,useSelector} from 'react-redux'
 import { signinFailure, signinStart, signinSucess } from "../redux/user/userSlice";
 import OAuth from "../components/OAuth";
@@ -99,7 +99,7 @@ export default function Login() {
     dispatch(signinStart())
     const {email,password} = form;
     const newData = {email,password};
-    axios.post(`http://localhost:8000/api/v1/user/login`,newData,{
+    axios.post(`${import.meta.env.VITE_API_ROUTE}/api/v1/user/login`,newData,{
       withCredentials:true
     })
     
@@ -279,11 +279,16 @@ const handleGoogleLogin = async()=>{
                 </svg>
                 Continue with Google
               </button>
-              <OAuth />
-
-              <p className="text-center text-xs mt-6" style={{ color: C.charcoalSoft }}>
-                By continuing you confirm you're at least 18 years old.
-              </p>
+              
+              
+             <div className="mt-6 text-center border-t border-slate-200/60 dark:border-slate-800 pt-6">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Want to look around first? 
+                  <Link to="/" className="ml-1 font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 underline underline-offset-4 transition-colors">
+                    Browse as Guest
+                  </Link>
+                </p>
+              </div>
             </form>
           </div>
         </div>

@@ -45,8 +45,9 @@ const listingSchema = new mongoose.Schema(
             message:'Not a valid option. Select from "sell" or "rent" '
         },
         offer:{
-            type:String,
-            required:true
+            type:Boolean,
+            required:true,
+            default:false
         },
         imageUrls: [
             { url: { type: String, required: true }, public_id: { type: String, required: true } }

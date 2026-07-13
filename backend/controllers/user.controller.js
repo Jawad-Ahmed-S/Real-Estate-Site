@@ -61,9 +61,7 @@ export const updateUser = async (req, res) => {
       new:true,runValidators:true
     }).select("-password");
     
-    console.log("BODY:", req.body);
-    console.log("FILE:", req.file);
-    console.log(updatedUser);
+    
 
     res.status(200).json({ user: updatedUser });
   } catch (err) {
@@ -92,5 +90,5 @@ export const logoutUser = asyncHandler(async (req,res,next)=>{
         expires: new Date(Date.now()),
         httpOnly:true
     })
-    res.status(200).json({sucess:true,message:"User Loggedout Successfully!"})
+    res.status(200).json({success:true,message:"User Loggedout Successfully!"})
 })

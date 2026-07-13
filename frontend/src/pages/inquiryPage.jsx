@@ -17,7 +17,7 @@ const C = {
 const fontDisplay = { fontFamily: "'Fraunces', serif" };
 const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
-const BASE_URL = "http://localhost:8000/api/v1/inquiry";
+const BASE_URL = `${import.meta.env.VITE_API_ROUTE}/api/v1/inquiry`;
 
 const timeAgo = (dateStr) => {
   const diff = Date.now() - new Date(dateStr).getTime();

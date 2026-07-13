@@ -35,7 +35,7 @@ export const getMySentInquiries = catchAsyncError(async(req,res,next)=>{
     .populate('listing', 'name address')
     .populate('reciever','firstName lastName')
     .sort({createdAt:-1});
-    console.log(myInquiries)
+    
 
     if(!myInquiries){
         return next(new errorHandler(404,'No Inquires Found'))
@@ -52,7 +52,7 @@ export const getListingInquiries = catchAsyncError(async(req,res,next)=>{
     })
     .populate('sender','name')
     .sort({createdAt:-1});
-    console.log(ListingInquiries)
+    
 
     if(!ListingInquiries){
         return next(new errorHandler(404,'No Inquires Found'))
@@ -70,7 +70,7 @@ export const getRecievedInquiries = catchAsyncError(async(req,res,next)=>{
     .populate('listing', 'name address')
     .populate('sender','firstName lastName')
     .sort({createdAt:-1});
-    console.log(myInquiries)
+    
 
     if(!myInquiries){
         return next(new errorHandler(404,'No Inquires Found'))

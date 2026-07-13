@@ -21,7 +21,7 @@ const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
 // TODO: confirm this base path — guessed to match your /inquiries convention,
 // not confirmed against a real mount point.
-const BASE_URL = "http://localhost:8000/api/v1/appointment";
+const BASE_URL = `${import.meta.env.VITE_API_ROUTE}/api/v1/appointment`;
 
 const STATUS_STYLES = {
   pending: { bg: "#FCF6EC", text: "#9A6F3C", label: "Pending" },

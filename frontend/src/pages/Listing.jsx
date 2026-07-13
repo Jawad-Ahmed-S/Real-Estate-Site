@@ -19,7 +19,7 @@ const fontDisplay = { fontFamily: "'Fraunces', serif" };
 const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
 const PAGE_SIZE = 9;
-const WISHLIST_BASE_URL = "http://localhost:8000/api/v1/wishlist";
+const WISHLIST_BASE_URL = `${import.meta.env.VITE_API_ROUTE}/api/v1/wishlist`;
 
 function buildQueryParams(searchParams) {
   const params = {};
@@ -72,7 +72,7 @@ export default function ListingsPage() {
       setLoading(true);
       setError("");
       try {
-        const res = await axios.get("http://localhost:8000/api/v1/listing", {
+        const res = await axios.get(`${import.meta.env.VITE_API_ROUTE}/api/v1/listing`, {
           params: buildQueryParams(searchParams),
           withCredentials: true,
           signal: controller.signal,

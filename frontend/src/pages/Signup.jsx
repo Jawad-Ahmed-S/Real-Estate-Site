@@ -104,7 +104,7 @@ export default function Signup() {
     setLoading(true);
     const {firstName,lastName,email,password} = form;
     const newData = {firstName,lastName,email,password};
-    axios.post(`http://localhost:8000/api/v1/user/register`,newData,{
+    axios.post(`${import.meta.env.VITE_API_ROUTE}/api/v1/user/register`,newData,{
       withCredentials:true
     })
     

@@ -27,16 +27,16 @@ function App() {
             <Route path='/signup' element={<Signup/>}></Route>
             <Route path='/login' element={<Login/>}></Route>
             <Route path='/listings' element={<ListingsPage/>}></Route>
-            <Route path='/mylistings' element={<MyListings/>}></Route>
-            <Route path='/listings/create' element={<CreateListing/>}></Route>
-            <Route path='/listings/update/:id' element={<UpdateListing/>}></Route>
             <Route path='/listings/:id' element={<ListingDetail/>}></Route>
             <Route path='/about' element={<About/>}></Route>
-            <Route path='/inquiries' element={<InquiriesPage/>}></Route>
-            <Route path='/wishlist' element={<WishlistPage/>}></Route>
-            <Route path='/appointments' element={<AppointmentsPage/>}></Route>
             <Route element={<PrivateRoute/>}>
+              <Route path='/mylistings' element={<MyListings/>}></Route>
+              <Route path='/listings/create' element={<CreateListing/>}></Route>
+              <Route path='/listings/update/:id' element={<UpdateListing/>}></Route>
               <Route path='/profile' element={<Profile/>}></Route>
+              <Route path='/appointments' element={<AppointmentsPage/>}></Route>
+              <Route path='/inquiries' element={<InquiriesPage/>}></Route>
+              <Route path='/wishlist' element={<WishlistPage/>}></Route>
             </Route>
         </Routes>
         </BrowserRouter>

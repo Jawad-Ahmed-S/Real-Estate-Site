@@ -7,11 +7,18 @@ import { uploadBufferToCloudinary, deleteFromCloudinary } from "../utils/cloudin
 
 
 export const createListing = catchAsyncError(async (req, res, next) => {
-    const { name, description, address, regularPrice, discountedPrice, bedrooms, bathrooms, furnished, parking, type, offer } = req.body;
+    let { name, description, address, regularPrice, discountedPrice, bedrooms, bathrooms, furnished, parking, type, offer } = req.body;
     const owner = req.user.id;
 
     if (!req.files || req.files.length === 0) {
         return next(new errorHandler(400, "At least one image is required!"));
+    }
+
+    const hasOffer = offer === true || offer === 'true';
+
+    
+    if (!hasOffer) {
+        discountedPrice = regularPrice;
     }
 
     const uploadResults = await Promise.all(
@@ -20,14 +27,12 @@ export const createListing = catchAsyncError(async (req, res, next) => {
 
     const imageUrls = uploadResults.map(r => ({ url: r.secure_url, public_id: r.public_id }));
 
-    let listingData = { name, description, address, regularPrice, discountedPrice, bedrooms, bathrooms, furnished, parking, type, offer, imageUrls, owner };
+    let listingData = { name, description, address, regularPrice, discountedPrice, bedrooms, bathrooms, furnished, parking, type, offer:hasOffer, imageUrls, owner };
 
     if (!listingData) {
         return next(new errorHandler(404, "Listing Data is not avilable for creation!"));
     }
-    if(offer===false){
-        discountedPrice=regularPrice
-    }
+    
     const listing = await Listing.create(listingData);
 
     return res.status(200).json({ sucess: true, message: "Listing Created!", listing });
@@ -47,6 +52,15 @@ export const updateListing = catchAsyncError(async (req, res, next) => {
 
     if (String(listing.owner) !== String(req.user.id)) {
         return next(new errorHandler(403, "Not authorized to update this listing!"));
+    }
+    if (newData.offer !== undefined) {
+        const hasOffer = newData.offer === true || newData.offer === 'true';
+        newData.offer = hasOffer;
+        
+        
+        if (!hasOffer) {
+            newData.discountedPrice = newData.regularPrice || listing.regularPrice; 
+        }
     }
 
     const keptImages = newData.existingImages ? JSON.parse(newData.existingImages) : [];
@@ -94,7 +108,7 @@ export const getSingleListing = catchAsyncError(async (req,res,next)=>{
 
 export const getAllListings = catchAsyncError(async (req,res,next)=>{
 
-     console.log("RAW req.query:", JSON.stringify(req.query))
+    //  console.log("RAW req.query:", JSON.stringify(req.query))
      
      const listingCount = await Listing.countDocuments()
      const resultsPerPage = 10
@@ -105,7 +119,7 @@ export const getAllListings = catchAsyncError(async (req,res,next)=>{
             });
         }
         
-        console.log("RAW req.query 2:", JSON.stringify(req.query))
+        // console.log("RAW req.query 2:", JSON.stringify(req.query))
     const apifeature = new ApiFeatures(Listing.find(),req.query).search().filter().pagination(resultsPerPage)
     const listings = await apifeature.query
     
@@ -146,7 +160,7 @@ export const getFeaturedListings = catchAsyncError(async (req,res,next)=>{
 })
 export const getMyListings = catchAsyncError(async (req,res,next)=>{
     const userId = req.user.id
-    console.log(userId)
+    
 
     const listings = await Listing.find({owner:userId}).sort({createdAt: -1})
 

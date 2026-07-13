@@ -22,7 +22,7 @@ const C = {
 const fontDisplay = { fontFamily: "'Fraunces', serif" };
 const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
-const WISHLIST_BASE_URL = "http://localhost:8000/api/v1/wishlist";
+const WISHLIST_BASE_URL = `${import.meta.env.VITE_API_ROUTE}/api/v1/wishlist`;
 
 const formatPKR = (n) => (typeof n === "number" ? `PKR ${n.toLocaleString("en-PK")}` : "—");
 
@@ -60,7 +60,7 @@ export default function ListingDetail() {
       setError("");
       try {
         
-        const res = await axios.get(`http://localhost:8000/api/v1/listing/${id}`, {
+        const res = await axios.get(`${import.meta.env.VITE_API_ROUTE}/api/v1/listing/${id}`, {
           withCredentials: true,
         });
         
@@ -115,7 +115,7 @@ export default function ListingDetail() {
     setDeleting(true);
     setDeleteError("");
     try {
-      await axios.delete(`http://localhost:8000/api/v1/listing/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_API_ROUTE}/api/v1/listing/${id}`, {
         withCredentials: true,
       });
       navigate("/listings");
@@ -136,7 +136,7 @@ export default function ListingDetail() {
     setInquirySending(true);
     try {
       await axios.post(
-        "http://localhost:8000/api/v1/inquiry/create",
+        `${import.meta.env.VITE_API_ROUTE}/api/v1/inquiry/create`,
         { listingId: id, message: inquiryMessage },
         { withCredentials: true }
       );
@@ -157,7 +157,7 @@ export default function ListingDetail() {
     try {
       
       await axios.post(
-        "http://localhost:8000/api/v1/appointment/create",
+        `${import.meta.env.VITE_API_ROUTE}/api/v1/appointment/create`,
         { listingId: id, proposedDateTime },
         { withCredentials: true }
       );
