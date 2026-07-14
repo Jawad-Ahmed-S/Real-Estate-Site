@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { Search, SlidersHorizontal, Loader2, X, Heart } from "lucide-react";
+import { Search, SlidersHorizontal, Loader2, X, Heart, Plus } from "lucide-react";
 import axios from "axios";
 import Header from "../components/header";
 import PropertyCard from "../components/propertyCard";
@@ -93,8 +93,7 @@ export default function ListingsPage() {
     return () => { ignore = true; controller.abort(); };
   }, [searchParams.toString()]);
 
-  // pull the signed-in user's wishlist once, so every card can show its saved state
-  // without firing one request per card
+  
   useEffect(() => {
     if (!currentUser) {
       setWishlist([]);
@@ -218,9 +217,16 @@ export default function ListingsPage() {
             <Link
               to="/myListings"
               className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-sm"
-              style={{ backgroundColor: C.brassDark, color: C.paper }}
+              style={{ border: `1px solid ${C.hair}`, color: C.charcoal }}
             >
               My listings
+            </Link>
+            <Link
+              to="/listings/create"
+              className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-sm"
+              style={{ backgroundColor: C.brassDark, color: C.paper }}
+            >
+              <Plus size={14} /> Create listing
             </Link>
           </div>
         </div>

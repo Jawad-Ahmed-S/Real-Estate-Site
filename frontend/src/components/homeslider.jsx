@@ -32,7 +32,8 @@ useEffect(() => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axiosInstance.get(`/listing/featured`);
+      const res = await axiosInstance.get(`api/v1/listing/featured`);
+      console.log(res)
       const raw = res.data?.AllListings ?? [];
       if (!cancelled) {
         setListings(raw); 
