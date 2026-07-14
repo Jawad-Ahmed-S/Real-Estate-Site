@@ -52,7 +52,8 @@ export default function AppointmentsPage() {
       try {
         const endpoint = tab === "sent" ? "sentAppointments" : "recievedAppointments";
         const res = await axiosInstance.get(`${BASE_URL}/${endpoint}`);
-        console.log("REsponse recived on frontnend: ",res)
+        console.log("Response recived on frontnend: ",res)
+        console.log("Response recived on frontnend: ",res.appointments)
         if (!ignore) setAppointments(res.data?.myAppointments || []);
       } catch (err) {
         if (ignore) return;
@@ -67,6 +68,7 @@ export default function AppointmentsPage() {
   }, [tab]);
 
   const runAction = async (id, requestFn, { removeOnSuccess = false } = {}) => {
+                          
     setActingId(id);
     setActionError("");
     try {
