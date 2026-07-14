@@ -52,7 +52,7 @@ export default function AppointmentsPage() {
       try {
         const endpoint = tab === "sent" ? "sentAppointments" : "recievedAppointments";
         const res = await axiosInstance.get(`${BASE_URL}/${endpoint}`);
-        // both endpoints respond with the same key: myAppointments (mirroring your /inquiries pattern)
+        console.log("REsponse recived on frontnend: ",res)
         if (!ignore) setAppointments(res.data?.myAppointments || []);
       } catch (err) {
         if (ignore) return;

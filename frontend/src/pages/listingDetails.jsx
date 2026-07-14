@@ -61,9 +61,7 @@ export default function ListingDetail() {
       setError("");
       try {
         
-        const res = await axiosInstance.get(`${import.meta.env.VITE_API_ROUTE}/api/v1/listing/${id}`, {
-          withCredentials: true,
-        });
+        const res = await axiosInstance.get(`/api/v1/listing/${id}`);
         
         if (!ignore) setListing(res.data.listingData || res.data);
       } catch (err) {
@@ -158,6 +156,7 @@ export default function ListingDetail() {
         `/api/v1/appointment/create`,
         { listingId: id, proposedDateTime }
       );
+      console.log("Proposed: ",proposedDateTime)
       setAppointmentSent(true);
       setProposedDateTime("");
     } catch (err) {
