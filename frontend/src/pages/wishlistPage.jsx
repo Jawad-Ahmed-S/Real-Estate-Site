@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { Loader2, AlertCircle, Heart } from "lucide-react";
 import Header from "../components/header";
-import PropertyCard from "../components/propertyCArd";
+import PropertyCard from "../components/propertyCard";
 
 const C = {
   paper: "#FBF9F4",

@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import { Search, SlidersHorizontal, Loader2, X, Heart } from "lucide-react";
 import axios from "axios";
 import Header from "../components/header";
-import PropertyCard from "../components/propertyCArd";
+import PropertyCard from "../components/propertyCard";
 
 const C = {
   ink: "#0F1A2B",
