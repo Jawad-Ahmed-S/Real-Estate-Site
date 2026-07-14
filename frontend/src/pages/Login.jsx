@@ -201,7 +201,7 @@ const handleGoogleLogin = async()=>{
               </h2>
               <p className="text-sm" style={{ color: C.charcoalSoft }}>
                 New to Keystone?{" "}
-                <a href="/signin" className="font-medium" style={{ color: C.brassDark }}>Register</a>
+                <Link to="/signup" className="font-medium" style={{ color: C.brassDark }}>Register</Link>
               </p>
             </div>
 
