@@ -4,8 +4,10 @@ export default function sendToken(res,user,StatusCode,msg){
 
     const option = {
         expires:new Date(Date.now()+process.env.COOKIE_EXPIRE*24*60*60*1000),
-        httpOnly:true
+        httpOnly:true,
+        secure:true,
+        sameSite:"none"
     }
+    console.log(token)
     res.status(StatusCode).cookie("token",token,option).json({sucess:true,message:msg,user,token})
-
 }
