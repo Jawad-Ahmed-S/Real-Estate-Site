@@ -14,7 +14,6 @@ const formatPKR = (n) =>
   typeof n === "number" ? `PKR ${n.toLocaleString("en-PK")}` : "—";
 
 
-
 export default function PropertyCard({
   listing,
   className = "",
