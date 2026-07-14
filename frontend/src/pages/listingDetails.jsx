@@ -8,6 +8,12 @@ import {
 } from "lucide-react";
 import Header from "../components/header";
 import axiosInstance from "../api/axiosInstance";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 const C = {
   ink: "#0F1A2B",
@@ -146,17 +152,19 @@ export default function ListingDetail() {
     }
   };
 
-  const handleRequestAppointment = async (e) => {
+    const handleRequestAppointment = async (e) => {
     e.preventDefault();
     setAppointmentError("");
     setAppointmentSending(true);
     try {
-      
+      // convert the naive local datetime-local value into a proper UTC ISO string
+      const utcDateTime = dayjs.tz(proposedDateTime, "Asia/Karachi").utc().format();
+
       await axiosInstance.post(
         `/api/v1/appointment/create`,
-        { listingId: id, proposedDateTime }
+        { listingId: id, proposedDateTime: utcDateTime }
       );
-      console.log("Proposed: ",proposedDateTime)
+      console.log("Proposed (sent as UTC): ", utcDateTime);
       setAppointmentSent(true);
       setProposedDateTime("");
     } catch (err) {

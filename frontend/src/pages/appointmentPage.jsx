@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import dayjs from "dayjs";
+import utc from 'dayjs/plugin/utc'
 import axios from "axios";
 import {
   Loader2, AlertCircle, MapPin, Check, X as XIcon, Ban, CalendarCheck2,
@@ -7,6 +9,7 @@ import {
 import Header from "../components/header";
 import axiosInstance from "../api/axiosInstance";
 
+dayjs.extend(utc)
 const C = {
   paper: "#FBF9F4",
   charcoal: "#1C2333",
@@ -30,10 +33,11 @@ const STATUS_STYLES = {
   completed: { bg: "#EAEEF2", text: "#5B6472", label: "Completed" },
 };
 
-const formatDateTime = (dateStr) =>
-  new Date(dateStr).toLocaleString("en-PK", {
-    weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit",
-  });
+const formatProposedTime = (utcDateStr) =>
+  dayjs.utc(utcDateStr).local().format("ddd, D MMM YYYY, h:mm A");
+
+
+
 
 export default function AppointmentsPage() {
   const [tab, setTab] = useState("received"); // "received" (owner) | "sent" (buyer)
@@ -53,7 +57,7 @@ export default function AppointmentsPage() {
         const endpoint = tab === "sent" ? "sentAppointments" : "recievedAppointments";
         const res = await axiosInstance.get(`${BASE_URL}/${endpoint}`);
         console.log("Response recived on frontnend: ",res)
-        console.log("Response recived on frontnend: ",res.appointments)
+        console.log("Appointments recived on frontnend: ",res.data?.myAppointments)
         if (!ignore) setAppointments(res.data?.myAppointments || []);
       } catch (err) {
         if (ignore) return;
@@ -196,7 +200,7 @@ export default function AppointmentsPage() {
                   </div>
 
                   <p className="text-sm mb-4" style={{ color: C.charcoal }}>
-                    Proposed for <span style={{ fontWeight: 600 }}>{formatDateTime(appt.proposedDateTime)}</span>
+                    Proposed for <span style={{ fontWeight: 600 }}>{formatProposedTime(appt.proposedDateTime)}</span>
                   </p>
 
                   <div className="flex items-center gap-4 pt-3" style={{ borderTop: `1px solid ${C.hair}` }}>
