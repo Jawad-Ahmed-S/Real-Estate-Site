@@ -1,6 +1,6 @@
 // appointment.controller.js
 import catchAsyncError from "../utils/catchAsyncError.js";
-import errorHandler from "../utils/errorHandler.js";
+import errorHandler from "../utils/errorhandler.js";
 import Appointment from '../models/appointment.model.js';
 import Listing from '../models/listing.model.js';
 

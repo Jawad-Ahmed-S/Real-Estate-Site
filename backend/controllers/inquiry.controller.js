@@ -1,4 +1,4 @@
-import errorHandler from "../utils/errorHandler.js"
+import errorHandler from "../utils/errorhandler.js"
 import catchAsyncError from "../utils/catchAsyncError.js"
 import Inquiry from "../models/inquiry.model.js"
 import Listing from "../models/listing.model.js"
