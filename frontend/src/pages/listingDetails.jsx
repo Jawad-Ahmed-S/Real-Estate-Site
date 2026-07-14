@@ -7,6 +7,7 @@ import {
   Send, CheckCircle2, CalendarClock, Heart,
 } from "lucide-react";
 import Header from "../components/header";
+import axiosInstance from "../api/axiosInstance";
 
 const C = {
   ink: "#0F1A2B",
@@ -22,7 +23,7 @@ const C = {
 const fontDisplay = { fontFamily: "'Fraunces', serif" };
 const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
-const WISHLIST_BASE_URL = `${import.meta.env.VITE_API_ROUTE}/api/v1/wishlist`;
+const WISHLIST_BASE_URL = `/api/v1/wishlist`;
 
 const formatPKR = (n) => (typeof n === "number" ? `PKR ${n.toLocaleString("en-PK")}` : "—");
 
@@ -60,7 +61,7 @@ export default function ListingDetail() {
       setError("");
       try {
         
-        const res = await axios.get(`${import.meta.env.VITE_API_ROUTE}/api/v1/listing/${id}`, {
+        const res = await axiosInstance.get(`${import.meta.env.VITE_API_ROUTE}/api/v1/listing/${id}`, {
           withCredentials: true,
         });
         
@@ -87,7 +88,7 @@ export default function ListingDetail() {
     let ignore = false;
     const fetchWishlistStatus = async () => {
       try {
-        const res = await axios.get(`${WISHLIST_BASE_URL}/`, { withCredentials: true });
+        const res = await axiosInstance.get(`${WISHLIST_BASE_URL}/`);
         const favourites = res.data?.favourites || [];
         const match = favourites.find((fav) => {
           const listingId = typeof fav.listing === "string" ? fav.listing : fav.listing?._id;
@@ -115,9 +116,7 @@ export default function ListingDetail() {
     setDeleting(true);
     setDeleteError("");
     try {
-      await axios.delete(`${import.meta.env.VITE_API_ROUTE}/api/v1/listing/${id}`, {
-        withCredentials: true,
-      });
+      await axiosInstance.delete(`/api/v1/listing/${id}`);
       navigate("/listings");
     } catch (err) {
       console.log("Delete listing error:", err.response?.data || err.message);
@@ -135,10 +134,9 @@ export default function ListingDetail() {
     setInquiryError("");
     setInquirySending(true);
     try {
-      await axios.post(
-        `${import.meta.env.VITE_API_ROUTE}/api/v1/inquiry/create`,
-        { listingId: id, message: inquiryMessage },
-        { withCredentials: true }
+      await axiosInstance.post(
+        `/api/v1/inquiry/create`,
+        { listingId: id, message: inquiryMessage }
       );
       setInquirySent(true);
       setInquiryMessage("");
@@ -156,10 +154,9 @@ export default function ListingDetail() {
     setAppointmentSending(true);
     try {
       
-      await axios.post(
-        `${import.meta.env.VITE_API_ROUTE}/api/v1/appointment/create`,
-        { listingId: id, proposedDateTime },
-        { withCredentials: true }
+      await axiosInstance.post(
+        `/api/v1/appointment/create`,
+        { listingId: id, proposedDateTime }
       );
       setAppointmentSent(true);
       setProposedDateTime("");
@@ -177,14 +174,13 @@ export default function ListingDetail() {
     setWishlistError("");
     try {
       if (wishlistId) {
-        await axios.delete(`${WISHLIST_BASE_URL}/${wishlistId}`, { withCredentials: true });
+        await axiosInstance.delete(`${WISHLIST_BASE_URL}/${wishlistId}`);
         setWishlisted(false);
         setWishlistId(null);
       } else {
-        const res = await axios.post(
+        const res = await axiosInstance.post(
           `${WISHLIST_BASE_URL}/mark`,
-          { listingId: id },
-          { withCredentials: true }
+          { listingId: id }
         );
         setWishlisted(true);
         setWishlistId(res.data?.wishlist?._id || null);

@@ -4,6 +4,7 @@ import axios from "axios";
 import { Loader2, AlertCircle, Heart } from "lucide-react";
 import Header from "../components/header";
 import PropertyCard from "../components/propertyCard";
+import axiosInstance from "../api/axiosInstance";
 
 const C = {
   paper: "#FBF9F4",
@@ -17,7 +18,7 @@ const C = {
 const fontDisplay = { fontFamily: "'Fraunces', serif" };
 const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
-const BASE_URL = `${import.meta.env.VITE_API_ROUTE}/api/v1/wishlist`;
+const BASE_URL = `/api/v1/wishlist`;
 
 export default function WishlistPage() {
   const [favourites, setFavourites] = useState([]);
@@ -31,7 +32,7 @@ export default function WishlistPage() {
       setLoading(true);
       setError("");
       try {
-        const res = await axios.get(`${BASE_URL}/`, { withCredentials: true });
+        const res = await axiosInstance.get(`${BASE_URL}/`);
         if (!ignore) setFavourites(res.data?.favourites || []);
       } catch (err) {
         if (ignore) return;
@@ -49,7 +50,7 @@ export default function WishlistPage() {
     setRemovingId(favouriteId);
     setError("");
     try {
-      await axios.delete(`${BASE_URL}/${favouriteId}`, { withCredentials: true });
+      await axiosInstance.delete(`${BASE_URL}/${favouriteId}`);
       setFavourites((prev) => prev.filter((fav) => fav._id !== favouriteId));
     } catch (err) {
       console.log("Remove favourite error:", err.response?.data || err.message);

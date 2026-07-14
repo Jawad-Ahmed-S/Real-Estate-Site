@@ -11,6 +11,7 @@ const C = {
 };
 
 import {signOutUserFailure,signOutUserStart,signOutUserSuccess} from '../redux/user/userSlice'
+import axiosInstance from "../api/axiosInstance";
 
 const fontDisplay = { fontFamily: "'Fraunces', serif" };
 
@@ -27,14 +28,14 @@ export default function Header() {
     try {
       dispatch(signOutUserStart());
 
-      const res = await axios.post(
-        `${import.meta.env.VITE_API_ROUTE}/api/v1/user/logout`,
-        {},
-        { withCredentials: true }
+      const res = await axiosInstance.post(
+        `/api/v1/user/logout`,
+        {}
       );
       console.log(res)
 
       if (res.data?.success === true) {
+        localStorage.removeItem("token");
         dispatch(signOutUserSuccess());
         navigate('/login');
       } else {

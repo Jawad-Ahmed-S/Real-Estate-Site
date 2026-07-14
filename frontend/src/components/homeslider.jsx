@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import axios from "axios";
 import PropertyCard from "./propertyCard";
 import { Link } from "react-router-dom";
+import axiosInstance from "../api/axiosInstance";
 
 const C = {
   charcoal: "#1C2333",
@@ -32,10 +32,10 @@ useEffect(() => {
     setLoading(true);
     setError(null);
     try {
-      const res = await axios.get(`${API_BASE}/listing/featured`);
+      const res = await axiosInstance.get(`/listing/featured`);
       const raw = res.data?.AllListings ?? [];
       if (!cancelled) {
-        setListings(raw); // pass raw docs straight through, no remapping
+        setListings(raw); 
       }
     } catch (err) {
       if (!cancelled) {

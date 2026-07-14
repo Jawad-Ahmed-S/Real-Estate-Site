@@ -4,6 +4,7 @@ import { Home, Building2, UserRound, Eye, EyeOff } from "lucide-react";
 import axios from 'axios'
 import {useNavigate} from 'react-router-dom'
 import OAuth from "../components/OAuth";
+import axiosInstance from "../api/axiosInstance";
 const C = {
   ink: "#0F1A2B",
   ink2: "#16273D",
@@ -104,9 +105,7 @@ export default function Signup() {
     setLoading(true);
     const {firstName,lastName,email,password} = form;
     const newData = {firstName,lastName,email,password};
-    axios.post(`${import.meta.env.VITE_API_ROUTE}/api/v1/user/register`,newData,{
-      withCredentials:true
-    })
+    axiosInstance.post(`/api/v1/user/register`,newData)
     
     .then(res =>{
       const data = res.data;

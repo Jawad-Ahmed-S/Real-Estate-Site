@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 import { ImagePlus, X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import Header from "../components/header";
+import axiosInstance from "../api/axiosInstance";
 
 const C = {
   ink: "#0F1A2B",
@@ -20,7 +21,7 @@ const C = {
 const fontDisplay = { fontFamily: "'Fraunces', serif" };
 const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
-const BASE_URL = `${import.meta.env.VITE_API_ROUTE}/api/v1/listing`;
+const BASE_URL = `/api/v1/listing`;
 const MAX_IMAGES = 10;
 const MAX_SIZE = 5 * 1024 * 1024;
 
@@ -53,12 +54,12 @@ export default function UpdateListing() {
       setPageLoading(true);
       setPageError("");
       try {
-        const res = await axios.get(`${BASE_URL}/${id}`, { withCredentials: true });
+        const res = await axiosInstance.get(`${BASE_URL}/${id}`);
         if (ignore) return;
         console.log(res)
         const listing = res.data?.listingData || res.data;
 
-        // owner check — a signed-in non-owner shouldn't get a working form
+        
         const ownerId = typeof listing.owner === "string" ? listing.owner : listing.owner?._id;
         if (!currentUser?._id || currentUser._id !== ownerId) {
           setForbidden(true);
@@ -198,7 +199,7 @@ export default function UpdateListing() {
       payload.append("existingImages", JSON.stringify(existingImages));
       newFiles.forEach((file) => payload.append("images", file));
 
-      const res = await axios.patch(`${BASE_URL}/${id}`, payload, { withCredentials: true });
+      const res = await axiosInstance.patch(`${BASE_URL}/${id}`, payload);
 
       newPreviews.forEach((url) => URL.revokeObjectURL(url));
       setSuccess(true);

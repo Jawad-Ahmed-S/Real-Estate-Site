@@ -4,6 +4,7 @@ import { Camera, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { updateUserFailure, updateUserSuccess, updateUserStart, clearError } from "../redux/user/userSlice";
 import Header from "../components/header";
 import axios from "axios";
+import axiosInstance from "../api/axiosInstance";
 
 const C = {
   ink: "#0F1A2B",
@@ -88,10 +89,9 @@ export default function ProfilePage() {
       payload.append("email", formData.email);
       if (avatarFile) payload.append("avatar", avatarFile);
 
-      const res = await axios.put(
-        `${import.meta.env.VITE_API_ROUTE}/api/v1/user/update`,
-        payload,
-        { withCredentials: true }
+      const res = await axiosInstance.put(
+        `/api/v1/user/update`,
+        payload
       );
       const updatedUser = res.data?.user ?? { ...currentUser, ...formData };
       console.log(updatedUser)

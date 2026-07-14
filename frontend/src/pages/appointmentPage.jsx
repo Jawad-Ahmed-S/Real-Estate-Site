@@ -5,6 +5,7 @@ import {
   Loader2, AlertCircle, MapPin, Check, X as XIcon, Ban, CalendarCheck2,
 } from "lucide-react";
 import Header from "../components/header";
+import axiosInstance from "../api/axiosInstance";
 
 const C = {
   paper: "#FBF9F4",
@@ -19,9 +20,8 @@ const C = {
 const fontDisplay = { fontFamily: "'Fraunces', serif" };
 const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
-// TODO: confirm this base path — guessed to match your /inquiries convention,
-// not confirmed against a real mount point.
-const BASE_URL = `${import.meta.env.VITE_API_ROUTE}/api/v1/appointment`;
+
+const BASE_URL = `/api/v1/appointment`;
 
 const STATUS_STYLES = {
   pending: { bg: "#FCF6EC", text: "#9A6F3C", label: "Pending" },
@@ -51,7 +51,7 @@ export default function AppointmentsPage() {
       setActionError("");
       try {
         const endpoint = tab === "sent" ? "sentAppointments" : "recievedAppointments";
-        const res = await axios.get(`${BASE_URL}/${endpoint}`, { withCredentials: true });
+        const res = await axiosInstance.get(`${BASE_URL}/${endpoint}`);
         // both endpoints respond with the same key: myAppointments (mirroring your /inquiries pattern)
         if (!ignore) setAppointments(res.data?.myAppointments || []);
       } catch (err) {
@@ -87,15 +87,15 @@ export default function AppointmentsPage() {
 
   const handleCancel = (id) => {
     if (!window.confirm("Cancel this appointment request?")) return;
-    runAction(id, () => axios.delete(`${BASE_URL}/${id}`, { withCredentials: true }), { removeOnSuccess: true });
+    runAction(id, () => axiosInstance.delete(`${BASE_URL}/${id}`), { removeOnSuccess: true });
   };
 
   const handleStatusUpdate = (id, newStatus) => {
-    runAction(id, () => axios.patch(`${BASE_URL}/statusUpdate/${id}`, { newStatus }, { withCredentials: true }));
+    runAction(id, () => axiosInstance.patch(`${BASE_URL}/statusUpdate/${id}`, { newStatus }));
   };
 
   const handleComplete = (id) => {
-    runAction(id, () => axios.patch(`${BASE_URL}/complete/${id}`, {}, { withCredentials: true }));
+    runAction(id, () => axiosInstance.patch(`${BASE_URL}/complete/${id}`, {}));
   };
 
   return (

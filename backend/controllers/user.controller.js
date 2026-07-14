@@ -83,12 +83,5 @@ export const deleteUser = asyncHandler(async (req,res,next)=>{
     return res.status(200).json({sucess:true,message:"User Deleted Sucessfully!",user:deletedUser})
 })
 export const logoutUser = asyncHandler(async (req,res,next)=>{
-    const userid = req.user.id
-
-    const user = await User.findById(userid);
-    res.cookie('token',null,{
-        expires: new Date(Date.now()),
-        httpOnly:true
-    })
     res.status(200).json({success:true,message:"User Loggedout Successfully!"})
 })

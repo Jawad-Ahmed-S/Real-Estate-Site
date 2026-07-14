@@ -6,6 +6,7 @@ import {
   Plus, Pencil, Trash2, Loader2, AlertCircle, BedDouble, Bath, MapPin, Tag,
 } from "lucide-react";
 import Header from "../components/header";
+import axiosInstance from "../api/axiosInstance";
 
 const C = {
   ink: "#0F1A2B",
@@ -20,8 +21,8 @@ const C = {
 const fontDisplay = { fontFamily: "'Fraunces', serif" };
 const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
-const BASE_URL = `${import.meta.env.VITE_API_ROUTE}/api/v1/listing/my-listings`;
-const BASE_DELETE_URL = `${import.meta.env.VITE_API_ROUTE}/api/v1/listing`;
+const BASE_URL = `/api/v1/listing/my-listings`;
+const BASE_DELETE_URL = `/api/v1/listing`;
 
 const formatPKR = (n) => (typeof n === "number" ? `PKR ${n.toLocaleString("en-PK")}` : "—");
 
@@ -49,9 +50,8 @@ export default function MyListings() {
       setLoading(true);
       setError("");
       try {
-        const res = await axios.get(BASE_URL, {
-          params: { owner: currentUser._id, page: 1 },
-          withCredentials: true,
+        const res = await axiosInstance.get(BASE_URL, {
+          params: { owner: currentUser._id, page: 1 }
         });
         console.log(res)
         if (ignore) return;
@@ -76,9 +76,8 @@ export default function MyListings() {
     const nextPage = page + 1;
     setLoadingMore(true);
     try {
-      const res = await axios.get(BASE_URL, {
+      const res = await axiosInstance.get(BASE_URL, {
         params: { owner: currentUser._id, page: nextPage },
-        withCredentials: true,
       });
       const results = res.data?.listings || [];
       setListings((prev) => [...prev, ...results]);
@@ -98,7 +97,7 @@ export default function MyListings() {
     setDeletingId(id);
     setDeleteError("");
     try {
-      await axios.delete(`${BASE_DELETE_URL}/${id}`, { withCredentials: true });
+      await axiosInstance.delete(`${BASE_DELETE_URL}/${id}`);
       setListings((prev) => prev.filter((l) => l._id !== id));
     } catch (err) {
       console.log("Delete listing error:", err.response?.data || err.message);

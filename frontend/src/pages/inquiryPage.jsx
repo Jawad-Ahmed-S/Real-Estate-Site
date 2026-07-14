@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 import { Loader2, AlertCircle, Trash2, Pencil, Check, X as XIcon, MapPin } from "lucide-react";
 import Header from "../components/header";
+import axiosInstance from "../api/axiosInstance";
 
 const C = {
   paper: "#FBF9F4",
@@ -17,7 +18,7 @@ const C = {
 const fontDisplay = { fontFamily: "'Fraunces', serif" };
 const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
-const BASE_URL = `${import.meta.env.VITE_API_ROUTE}/api/v1/inquiry`;
+const BASE_URL = `/api/v1/inquiry`;
 
 const timeAgo = (dateStr) => {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -52,7 +53,7 @@ export default function InquiriesPage() {
       setActionError("");
       try {
         const endpoint = tab === "sent" ? "sentInquiries" : "recievedInquiries";
-        const res = await axios.get(`${BASE_URL}/${endpoint}`, { withCredentials: true });
+        const res = await axiosInstance.get(`${BASE_URL}/${endpoint}`);
         console.log(res)
         if (!ignore) setInquiries(res.data?.myInquiries || []);
       } catch (err) {
@@ -82,7 +83,7 @@ export default function InquiriesPage() {
     setSavingId(id);
     setActionError("");
     try {
-      const res = await axios.patch(
+      const res = await axiosInstance.patch(
         `${BASE_URL}/${id}`,
         { message: editValue },
         { withCredentials: true }
@@ -103,7 +104,7 @@ export default function InquiriesPage() {
     setDeletingId(id);
     setActionError("");
     try {
-      await axios.delete(`${BASE_URL}/${id}`, { withCredentials: true });
+      await axiosInstance.delete(`${BASE_URL}/${id}`);
       setInquiries((prev) => prev.filter((inq) => inq._id !== id));
     } catch (err) {
       console.log("Delete inquiry error:", err.response?.data || err.message);

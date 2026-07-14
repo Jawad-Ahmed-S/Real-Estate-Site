@@ -4,7 +4,13 @@ import errorHandler from '../utils/errorhandler.js'
 import jwt from 'jsonwebtoken'
 const verifyUser = catchAsyncError(async(req,res,next)=>{
 ;
-    const {token} = req.cookies
+      const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return next(new errorHandler(401,"Please login to access this resource"));
+    }
+
+    const token = authHeader.split(" ")[1];
     if(!token){
         return next(new errorHandler(404,"User token not Found!"))
     }

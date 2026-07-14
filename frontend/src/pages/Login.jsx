@@ -6,6 +6,7 @@ import { useNavigate,Link } from "react-router-dom";
 import {useDispatch,useSelector} from 'react-redux'
 import { signinFailure, signinStart, signinSucess } from "../redux/user/userSlice";
 import OAuth from "../components/OAuth";
+import axiosInstance from "../api/axiosInstance";
 const C = {
   ink: "#0F1A2B",
   ink2: "#16273D",
@@ -99,13 +100,12 @@ export default function Login() {
     dispatch(signinStart())
     const {email,password} = form;
     const newData = {email,password};
-    axios.post(`${import.meta.env.VITE_API_ROUTE}/api/v1/user/login`,newData,{
-      withCredentials:true
-    })
+    axiosInstance.post(`/api/v1/user/login`,newData)
     
     .then(res =>{
       const data = res.data;
       if (data && (data.success || data.user || data.token)) {
+        localStorage.setItem("token",data.token)
         dispatch(signinSucess(data))
         navigate('/')
         console.log(res);

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ImagePlus, X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import Header from "../components/header";
+import axiosInstance from "../api/axiosInstance";
 
 const C = {
   ink: "#0F1A2B",
@@ -150,9 +151,7 @@ export default function CreateListing() {
       payload.append("offer", formData.offer);
       newFiles.forEach((file) => payload.append("images", file));
 
-      const res = await axios.post(`${import.meta.env.VITE_API_ROUTE}/api/v1/listing/create`, payload, {
-        withCredentials: true,
-      });
+      const res = await axiosInstance.post(`/api/v1/listing/create`, payload);
 
       if (res.data?.sucess === false) {
         setError(res.data.message || "Something went wrong creating the listing.");

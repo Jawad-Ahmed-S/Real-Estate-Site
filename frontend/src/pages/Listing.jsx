@@ -5,6 +5,7 @@ import { Search, SlidersHorizontal, Loader2, X, Heart } from "lucide-react";
 import axios from "axios";
 import Header from "../components/header";
 import PropertyCard from "../components/propertyCard";
+import axiosInstance from "../api/axiosInstance";
 
 const C = {
   ink: "#0F1A2B",
@@ -19,7 +20,7 @@ const fontDisplay = { fontFamily: "'Fraunces', serif" };
 const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
 const PAGE_SIZE = 9;
-const WISHLIST_BASE_URL = `${import.meta.env.VITE_API_ROUTE}/api/v1/wishlist`;
+const WISHLIST_BASE_URL = `/api/v1/wishlist`;
 
 function buildQueryParams(searchParams) {
   const params = {};
@@ -72,7 +73,7 @@ export default function ListingsPage() {
       setLoading(true);
       setError("");
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_ROUTE}/api/v1/listing`, {
+        const res = await axiosInstance.get(`${import.meta.env.VITE_API_ROUTE}/api/v1/listing`, {
           params: buildQueryParams(searchParams),
           withCredentials: true,
           signal: controller.signal,
@@ -102,7 +103,7 @@ export default function ListingsPage() {
     let ignore = false;
     const fetchWishlist = async () => {
       try {
-        const res = await axios.get(`${WISHLIST_BASE_URL}/`, { withCredentials: true });
+        const res = await axiosInstance.get(`${WISHLIST_BASE_URL}/`);
         if (!ignore) setWishlist(res.data?.favourites || []);
       } catch (err) {
         console.log("Fetch wishlist error:", err.response?.data || err.message);
@@ -127,10 +128,10 @@ export default function ListingsPage() {
     setWishlistBusyId(listingId);
     try {
       if (existingFavouriteId) {
-        await axios.delete(`${WISHLIST_BASE_URL}/${existingFavouriteId}`, { withCredentials: true });
+        await axiosInstance.delete(`${WISHLIST_BASE_URL}/${existingFavouriteId}`);
         setWishlist((prev) => prev.filter((fav) => fav._id !== existingFavouriteId));
       } else {
-        const res = await axios.post(`${WISHLIST_BASE_URL}/mark`, { listingId }, { withCredentials: true });
+        const res = await axiosInstance.post(`${WISHLIST_BASE_URL}/mark`, { listingId });
         const created = res.data?.wishlist;
         if (created) setWishlist((prev) => [...prev, created]);
       }
