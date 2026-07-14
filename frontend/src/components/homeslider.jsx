@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import axios from "axios";
-import PropertyCard from "./PropertyCard";
+import PropertyCard from "./propertyCard";
 import { Link } from "react-router-dom";
 
 const C = {
