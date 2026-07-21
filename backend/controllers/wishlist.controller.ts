@@ -2,12 +2,12 @@ import errorHandler from "../utils/errorhandler.js"
 import catchAsyncError from "../utils/catchAsyncError.js"
 import Wishlist from "../models/wishlist.model.js"
 import Listing from "../models/listing.model.js"
-import User from "../models/user.model.js"
+import type {Request,Response,NextFunction } from "express"
 
 
+ 
 
-
-export const markFavourite = catchAsyncError(async (req,res,next)=>{
+export const markFavourite = catchAsyncError(async (req:Request,res:Response,next:NextFunction)=>{
         const {listingId} = req.body
         const userId = req.user.id
 
@@ -30,7 +30,7 @@ export const markFavourite = catchAsyncError(async (req,res,next)=>{
         return res.status(200).json({sucess:true,message:"Favourite included in Wishlist Sucessfully!",wishlist});
 })
 
-export const demarkFavourite = catchAsyncError(async(req,res,next)=>{
+export const demarkFavourite = catchAsyncError(async (req:Request,res:Response,next:NextFunction)=>{
     const favouriteId = req.params.id
     const userId = req.user.id
 
@@ -50,7 +50,7 @@ export const demarkFavourite = catchAsyncError(async(req,res,next)=>{
 })
 
 
-export const getMyFavourites = catchAsyncError(async(req,res,next)=>{
+export const getMyFavourites = catchAsyncError(async (req:Request,res:Response,next:NextFunction)=>{
     
     const userId = req.user.id
     const favourites = await Wishlist.find({user:userId}).populate('listing')
@@ -61,7 +61,7 @@ export const getMyFavourites = catchAsyncError(async(req,res,next)=>{
     
     return res.status(200).json({sucess:true,message:"All Favourites Fetched!",favourites})
 })
-export const getSingleFavourite = catchAsyncError(async(req,res,next)=>{
+export const getSingleFavourite = catchAsyncError(async(req:Request,res:Response,next:NextFunction)=>{
     
     const favouriteId = req.params.id
     const favourite = await Wishlist.findById(favouriteId).populate('listing')

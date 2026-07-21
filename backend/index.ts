@@ -10,8 +10,8 @@ import WishlistRouter from './routes/wishlist.route.js'
 import errorMiddleware from './middlewares/error.js'
 import cookieParser from "cookie-parser";
 import cors from 'cors'
-import cloudinary from './config/cloudinary.js'
 
+ 
 const app = express()
 
 
@@ -30,13 +30,28 @@ app.use(cors({
 }))
 
 
-mongoose.connect(process.env.MONGODB_URI).then(console.log("MongoDB connected!"))
+mongoose.connect(String(process.env.MONGODB_URI)).then(()=>console.log("MongoDB connected!"))
 
 
+app.get("/", (req, res) => {
+  console.log("Root hit");
+  res.send("Server is alive");
+});
+
+
+console.log("Registering User routes");
+app.use((req, res, next) => {
+  console.log(req.method, req.originalUrl);
+  next(); 
+})
 app.use('/api/v1/user',userRouter)
+console.log("Registering Listing routes");
 app.use('/api/v1/listing',listingRouter)
+console.log("Registering Inquiry routes");
 app.use('/api/v1/inquiry',inquiryRouter)
+console.log("Registering Appointment routes");
 app.use('/api/v1/appointment',AppointmentRouter)
+console.log("Registering Wishlist routes");
 app.use('/api/v1/wishlist',WishlistRouter)
 
 

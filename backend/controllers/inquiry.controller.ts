@@ -3,10 +3,13 @@ import catchAsyncError from "../utils/catchAsyncError.js"
 import Inquiry from "../models/inquiry.model.js"
 import Listing from "../models/listing.model.js"
 import User from "../models/user.model.js"
+import type{ Request,Response,NextFunction } from "express"
 
+type ListingParams = {
+    id: string;
+};
 
-
-export const createInquiry = catchAsyncError(async (req,res,next)=>{
+export const createInquiry = catchAsyncError(async (req:Request, res:Response, next:NextFunction)=>{
         const {listingId,message} = req.body
         const sender =req.user.id
         
@@ -26,7 +29,7 @@ export const createInquiry = catchAsyncError(async (req,res,next)=>{
         return res.status(200).json({sucess:true,message:"Inquiry Sent Sucessfully!"});
 })
 
-export const getMySentInquiries = catchAsyncError(async(req,res,next)=>{
+export const getMySentInquiries = catchAsyncError(async (req:Request, res:Response, next:NextFunction)=>{
     const userId = req.user.id
     
     const myInquiries = await Inquiry.find({
@@ -42,10 +45,10 @@ export const getMySentInquiries = catchAsyncError(async(req,res,next)=>{
     }
 
     return res.status(200).json({sucess:true,message:"My Inquiries Fetched!",myInquiries})
-})
+}) 
 
 
-export const getListingInquiries = catchAsyncError(async(req,res,next)=>{
+export const getListingInquiries = catchAsyncError(async(req:Request<ListingParams>, res:Response, next:NextFunction)=>{
     const listingId = req.params.id
     const ListingInquiries = await Inquiry.find({
         listing:listingId
@@ -61,7 +64,7 @@ export const getListingInquiries = catchAsyncError(async(req,res,next)=>{
     return res.status(200).json({sucess:true,message:"Listing's Inquiries Fetched!",ListingInquiries})
 })
 
-export const getRecievedInquiries = catchAsyncError(async(req,res,next)=>{
+export const getRecievedInquiries = catchAsyncError(async (req:Request, res:Response, next:NextFunction)=>{
     const userId = req.user.id
     
     const myInquiries = await Inquiry.find({
@@ -79,7 +82,7 @@ export const getRecievedInquiries = catchAsyncError(async(req,res,next)=>{
     return res.status(200).json({sucess:true,message:"My Inquiries Fetched!",myInquiries})
 })
 
-export const updateInquiry = catchAsyncError(async(req,res,next)=>{
+export const updateInquiry = catchAsyncError(async(req:Request, res:Response, next:NextFunction)=>{
     const inquiryId = req.params.id
     const inquiry = await Inquiry.findById(inquiryId)
     if(!inquiry){
@@ -95,7 +98,7 @@ export const updateInquiry = catchAsyncError(async(req,res,next)=>{
     
 })
 
-export const deleteInquiry = catchAsyncError(async(req,res,next)=>{
+export const deleteInquiry = catchAsyncError(async(req:Request, res:Response, next:NextFunction)=>{
     const inquiryId = req.params.id
     const inquiry = await Inquiry.findById(inquiryId)
     if(!inquiry){
@@ -107,7 +110,7 @@ export const deleteInquiry = catchAsyncError(async(req,res,next)=>{
     
 })
 
-export const getInquiry = catchAsyncError(async(req,res,next)=>{
+export const getInquiry = catchAsyncError(async(req:Request, res:Response, next:NextFunction)=>{
     const inquiryId = req.params.id
     const inquiry = await Inquiry.findById(inquiryId)
     if(!inquiry){

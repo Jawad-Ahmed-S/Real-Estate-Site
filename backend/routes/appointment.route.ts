@@ -4,7 +4,7 @@ import verifyUser from "../middlewares/auth.js";
 
 
 const router = express.Router()
-
+ 
 
 router.route('/create').post(verifyUser,createAppointment)
 router.route('/sentAppointments').get(verifyUser,getMyBookedAppointments)

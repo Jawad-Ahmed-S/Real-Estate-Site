@@ -3,13 +3,21 @@ import catchAsyncError from "../utils/catchAsyncError.js";
 import errorHandler from "../utils/errorhandler.js";
 import ApiFeatures from "../utils/apiFeatures.js";
 import { uploadBufferToCloudinary, deleteFromCloudinary } from "../utils/cloudinaryUpload.js";
+import type { Request,Response,NextFunction } from "express";
+import type { UploadApiResponse } from "cloudinary";
+
+
+interface IImage{
+    url:string,
+    public_id:string
+}
 
 
 
-export const createListing = catchAsyncError(async (req, res, next) => {
+export const createListing = catchAsyncError(async (req:Request, res:Response, next:NextFunction) => {
     let { name, description, address, regularPrice, discountedPrice, bedrooms, bathrooms, furnished, parking, type, offer } = req.body;
     const owner = req.user.id;
-
+    const files = req.files as Express.Multer.File[];
     if (!req.files || req.files.length === 0) {
         return next(new errorHandler(400, "At least one image is required!"));
     }
@@ -21,11 +29,12 @@ export const createListing = catchAsyncError(async (req, res, next) => {
         discountedPrice = regularPrice;
     }
 
-    const uploadResults = await Promise.all(
-        req.files.map(file => uploadBufferToCloudinary(file.buffer, "listings"))
+    const uploadResults:UploadApiResponse[] = await Promise.all(
+
+        files.map((file) => uploadBufferToCloudinary(file.buffer, "listings"))
     );
 
-    const imageUrls = uploadResults.map(r => ({ url: r.secure_url, public_id: r.public_id }));
+    const imageUrls:IImage[] = uploadResults.map((r)  => ({ url: r.secure_url, public_id: r.public_id }));
 
     let listingData = { name, description, address, regularPrice, discountedPrice, bedrooms, bathrooms, furnished, parking, type, offer:hasOffer, imageUrls, owner };
 
@@ -40,12 +49,12 @@ export const createListing = catchAsyncError(async (req, res, next) => {
  
 
 
-export const updateListing = catchAsyncError(async (req, res, next) => {
+export const updateListing = catchAsyncError(async (req:Request, res:Response, next:NextFunction) => {
     const newData = req.body;
     const listingId = req.params.id;
 
     const listing = await Listing.findById(listingId);
-
+    const files = req.files as Express.Multer.File[];
     if (!listing) {
         return next(new errorHandler(404, "Lisitng Not found!"));
     }
@@ -63,16 +72,16 @@ export const updateListing = catchAsyncError(async (req, res, next) => {
         }
     }
 
-    const keptImages = newData.existingImages ? JSON.parse(newData.existingImages) : [];
+    const keptImages:IImage[] = newData.existingImages ? JSON.parse(newData.existingImages) : [];
     const keptPublicIds = new Set(keptImages.map(img => img.public_id));
     const toDelete = listing.imageUrls.filter(img => !keptPublicIds.has(img.public_id));
 
     await Promise.all(toDelete.map(img => deleteFromCloudinary(img.public_id)));
 
-    let newImages = [];
-    if (req.files && req.files.length > 0) {
+    let newImages:IImage[] = [];
+    if (files && files.length > 0) {
         const uploadResults = await Promise.all(
-            req.files.map(file => uploadBufferToCloudinary(file.buffer, "listings"))
+            files.map(file => uploadBufferToCloudinary(file.buffer, "listings"))
         );
         newImages = uploadResults.map(r => ({ url: r.secure_url, public_id: r.public_id }));
     }
@@ -92,7 +101,7 @@ export const updateListing = catchAsyncError(async (req, res, next) => {
 });
 
 
-export const getSingleListing = catchAsyncError(async (req,res,next)=>{
+export const getSingleListing = catchAsyncError(async (req:Request, res:Response, next:NextFunction)=>{
     const listingId = req.params.id
 
      const listing = await Listing.findById(listingId);
@@ -106,20 +115,13 @@ export const getSingleListing = catchAsyncError(async (req,res,next)=>{
 })
 
 
-export const getAllListings = catchAsyncError(async (req,res,next)=>{
+export const getAllListings = catchAsyncError(async (req:Request, res:Response, next:NextFunction)=>{
 
-    //  console.log("RAW req.query:", JSON.stringify(req.query))
+    
      
      const listingCount = await Listing.countDocuments()
      const resultsPerPage = 10
      
-     if (req.query.discountedPrice) {
-         Object.keys(req.query.discountedPrice).forEach((key) => {
-             req.query.discountedPrice[key] = Number(req.query.discountedPrice[key]);
-            });
-        }
-        
-        // console.log("RAW req.query 2:", JSON.stringify(req.query))
     const apifeature = new ApiFeatures(Listing.find(),req.query).search().filter().pagination(resultsPerPage)
     const listings = await apifeature.query
     
@@ -132,19 +134,12 @@ export const getAllListings = catchAsyncError(async (req,res,next)=>{
     return res.status(200).json({sucess:true,AllListings:listings})
 
 })
-export const getFeaturedListings = catchAsyncError(async (req,res,next)=>{
+export const getFeaturedListings = catchAsyncError(async (req:Request, res:Response, next:NextFunction)=>{
 
     //  console.log("RAW req.query:", JSON.stringify(req.query))
-     
+      
      const listingCount = await Listing.countDocuments()
      const resultsPerPage = 10
-     
-     if (req.query.discountedPrice) {
-         Object.keys(req.query.discountedPrice).forEach((key) => {
-             req.query.discountedPrice[key] = Number(req.query.discountedPrice[key]);
-            });
-        }
-        
         // console.log("RAW req.query 2:", JSON.stringify(req.query))
     const apifeature = new ApiFeatures(Listing.find(),req.query).pagination(resultsPerPage)
     const listings = await apifeature.query
@@ -158,7 +153,7 @@ export const getFeaturedListings = catchAsyncError(async (req,res,next)=>{
     return res.status(200).json({sucess:true,AllListings:listings})
 
 })
-export const getMyListings = catchAsyncError(async (req,res,next)=>{
+export const getMyListings = catchAsyncError(async (req:Request, res:Response, next:NextFunction)=>{
     const userId = req.user.id
     
 
@@ -174,7 +169,7 @@ export const getMyListings = catchAsyncError(async (req,res,next)=>{
     })
 })
 
-export const deleteListing = catchAsyncError(async (req, res, next) => {
+export const deleteListing = catchAsyncError(async (req:Request, res:Response, next:NextFunction) => {
     const listingId = req.params.id;
 
     const listing = await Listing.findById(listingId);

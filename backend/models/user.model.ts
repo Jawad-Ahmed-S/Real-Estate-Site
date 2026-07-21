@@ -1,8 +1,10 @@
-import mongoose, { mongo } from "mongoose";
+import mongoose, { type Model } from "mongoose";
 import  validator  from "validator";
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-const userSchema = new mongoose.Schema(
+import type {IUser,IUserMethods} from '../types/express/user.js'
+
+const userSchema = new mongoose.Schema<IUser, Model<IUser, {}, IUserMethods>, IUserMethods>(
     {
         firstName:{
             type:String,
@@ -45,14 +47,14 @@ userSchema.pre("save",async function (){
     this.password = await bcrypt.hash(this.password,10)
 })
 
-userSchema.methods.comparePassword = function(Enteredpassword){
+userSchema.methods.comparePassword = function(Enteredpassword:string){
     
     return bcrypt.compare(Enteredpassword,this.password)
 }
 
 userSchema.methods.getJWT = function(){
-    const token = jwt.sign({id:this._id},process.env.JWT_SECRET,{expiresIn:process.env.JWT_EXPIRE})
+    const token = jwt.sign({id:this._id},(process.env.JWT_SECRET|| ""),{expiresIn:process.env.JWT_EXPIRE as any})
     return token
 }
-const User = mongoose.model("User",userSchema)
-export default User
+const User = mongoose.model<IUser, Model<IUser, {}, IUserMethods>>("User",userSchema);
+export default User 

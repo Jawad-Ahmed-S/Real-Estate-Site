@@ -9,7 +9,7 @@ const inquirySchema = new mongoose.Schema(
         },
         reciever:{ 
             type:Schema.Types.ObjectId,
-            ref:'User',
+            ref:'User', 
             required:true
         },
         listing:{

@@ -1,5 +1,9 @@
+import type { Query } from "mongoose";
+
 export default class ApiFeatures{
-    constructor(query,queryStr){
+    query:Query<any,any>
+    queryStr:Record<string,any>
+    constructor(query:Query<any,any>,queryStr:Record<string,any>){
         this.query=query,
         this.queryStr=queryStr
     }
@@ -13,7 +17,7 @@ export default class ApiFeatures{
                 {name:{$regex:safeKeyword,$options:"i"}},
                 {description:{$regex:safeKeyword,$options:"i"}},
                 {address:{$regex:safeKeyword,$options:"i"}},
-            ]
+            ] 
         })
         return this
     }
@@ -30,6 +34,7 @@ export default class ApiFeatures{
 
     Object.keys(parsedQuery).forEach((field) => {
         const val = parsedQuery[field]
+        
         if (val && typeof val === "object") {
             Object.keys(val).forEach((op) => {
                 if (!isNaN(val[op])) val[op] = Number(val[op])
@@ -42,7 +47,7 @@ export default class ApiFeatures{
     this.query = this.query.find(parsedQuery)
     return this
 }
-    pagination(resultPerPage){
+    pagination(resultPerPage:number){
         const currentPage = Number(this.queryStr.page) || 1
         const skip = resultPerPage * (currentPage-1)
         this.query = this.query.limit(resultPerPage).skip(skip)

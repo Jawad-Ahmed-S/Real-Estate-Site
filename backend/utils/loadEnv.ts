@@ -1,2 +1,2 @@
 import { configDotenv } from "dotenv";
-configDotenv();
+configDotenv(); 

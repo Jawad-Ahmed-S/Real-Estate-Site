@@ -1,10 +1,10 @@
-// appointment.controller.js
 import catchAsyncError from "../utils/catchAsyncError.js";
 import errorHandler from "../utils/errorhandler.js";
 import Appointment from '../models/appointment.model.js';
 import Listing from '../models/listing.model.js';
-
-export const createAppointment = catchAsyncError(async (req, res, next) => {
+import type { Request,Response,NextFunction } from "express";
+ 
+export const createAppointment = catchAsyncError(async (req:Request, res:Response, next:NextFunction) => {
     const { listingId, proposedDateTime } = req.body;
     const buyer = req.user.id;
 
@@ -20,7 +20,7 @@ export const createAppointment = catchAsyncError(async (req, res, next) => {
     return res.status(200).json({ sucess: true, message: "Appointment requested successfully!", appointment });
 });
 
-export const getMyBookedAppointments = catchAsyncError(async (req, res, next) => {
+export const getMyBookedAppointments = catchAsyncError(async (req:Request, res:Response, next:NextFunction) => {
     const userId = req.user.id;
     const myAppointments = await Appointment.find({ buyer: userId })
         .populate('listing', 'name address')
@@ -30,7 +30,7 @@ export const getMyBookedAppointments = catchAsyncError(async (req, res, next) =>
     return res.status(200).json({ sucess: true, message: "My appointments fetched!", myAppointments });
 });
 
-export const getRequestedAppointments = catchAsyncError(async (req, res, next) => {
+export const getRequestedAppointments = catchAsyncError(async (req:Request, res:Response, next:NextFunction) => {
     const userId = req.user.id;
     const myAppointments = await Appointment.find({ owner: userId })
         .populate('listing', 'name address')
@@ -40,7 +40,7 @@ export const getRequestedAppointments = catchAsyncError(async (req, res, next) =
     return res.status(200).json({ sucess: true, message: "Requested appointments fetched!", myAppointments });
 });
 
-export const cancelAppointment = catchAsyncError(async (req, res, next) => {
+export const cancelAppointment = catchAsyncError(async (req:Request, res:Response, next:NextFunction) => {
     const appointmentId = req.params.id;
     const appointment = await Appointment.findById(appointmentId);
     if (!appointment) return next(new errorHandler(404, "Appointment not found!"));
@@ -49,7 +49,7 @@ export const cancelAppointment = catchAsyncError(async (req, res, next) => {
     return res.status(200).json({ sucess: true, message: "Appointment cancelled!", deletedAppointment });
 });
 
-export const updateAppointmentRequest = catchAsyncError(async (req, res, next) => {
+export const updateAppointmentRequest = catchAsyncError(async (req:Request, res:Response, next:NextFunction) => {
     const appointmentId = req.params.id;
     const appointment = await Appointment.findById(appointmentId);
     if (!appointment) return next(new errorHandler(404, "Appointment not found!"));
@@ -62,7 +62,7 @@ export const updateAppointmentRequest = catchAsyncError(async (req, res, next) =
     return res.status(200).json({ sucess: true, message: "Appointment updated!", updatedAppointment });
 });
 
-export const updateAppointmentStatus = catchAsyncError(async (req, res, next) => {
+export const updateAppointmentStatus = catchAsyncError(async (req:Request, res:Response, next:NextFunction) => {
     const appointmentId = req.params.id;
     const { newStatus } = req.body;
 
@@ -92,7 +92,7 @@ export const updateAppointmentStatus = catchAsyncError(async (req, res, next) =>
     return res.status(200).json({ sucess: true, message: `Appointment successfully ${newStatus}.`, updatedAppointment: appointment });
 });
 
-export const updateAppointmentComplete = catchAsyncError(async (req, res, next) => {
+export const updateAppointmentComplete = catchAsyncError(async (req:Request, res:Response, next:NextFunction) => {
     const appointmentId = req.params.id;
     const appointment = await Appointment.findById(appointmentId);
     if (!appointment) return next(new errorHandler(404, "Appointment not found!"));

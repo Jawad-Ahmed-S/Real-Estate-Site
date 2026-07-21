@@ -3,7 +3,8 @@ import { signin,login,updateUser,deleteUser,logoutUser } from "../controllers/us
 import verifyUser from '../middlewares/auth.js'
 import { uploadSingle } from "../middlewares/multer.js";
 const router = express.Router()
-
+ 
+console.log("User router Called!")
 router.post('/register',signin)
 router.post('/login',login)
 router.put('/update',verifyUser,uploadSingle,updateUser)
