@@ -5,9 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node backend/index.js",
-    "dev": "tsx watch backend/index.ts"
+  "build": "tsc -p backend/tsconfig.json",
+  "start": "node backend/dist/index.js",
+  "dev": "tsx watch backend/index.ts"
   },
   "repository": {
     "type": "git",
