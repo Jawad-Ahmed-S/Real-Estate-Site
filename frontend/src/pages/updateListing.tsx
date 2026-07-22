@@ -1,11 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useSelector } from "react-redux";
-import axios from "axios";
 import { ImagePlus, X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import Header from "../components/header";
 import axiosInstance from "../api/axiosInstance";
-
+import type { RootState } from "../redux/store";
+import { isAxiosError } from "axios";
+import type { ListingInterface } from "../types/listing";
+import type { IImage } from "../types/Image";
 const C = {
   ink: "#0F1A2B",
   ink2: "#16273D",
@@ -25,16 +27,34 @@ const BASE_URL = `/api/v1/listing`;
 const MAX_IMAGES = 10;
 const MAX_SIZE = 5 * 1024 * 1024;
 
+
+
+const initialForm:ListingInterface = {
+  _id:"",
+  name: "",
+  description: "",
+  address: "",
+  regularPrice: 0,
+  discountedPrice: 0,
+  bedrooms: 1,
+  bathrooms: 1,
+  furnished: false,
+  parking: false,
+  type: "sell",
+  owner:"",
+  offer: false,
+};
+
+
 export default function UpdateListing() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { currentUser } = useSelector((state) => state.user);
-  const fileInputRef = useRef(null);
-
-  const [formData, setFormData] = useState(null); // null until the listing loads
-  const [existingImages, setExistingImages] = useState([]); // [{ url, public_id }]
-  const [newFiles, setNewFiles] = useState([]);
-  const [newPreviews, setNewPreviews] = useState([]);
+  const { currentUser } = useSelector((state:RootState) => state.user);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [formData, setFormData] = useState(initialForm); 
+  const [existingImages, setExistingImages] = useState<IImage[]>([]);
+  const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [newPreviews, setNewPreviews] = useState<string[]>([]);
 
   const [pageLoading, setPageLoading] = useState(true);
   const [pageError, setPageError] = useState("");
@@ -68,6 +88,7 @@ export default function UpdateListing() {
         }
 
         setFormData({
+          _id:listing._id,
           name: listing.name || "",
           description: listing.description || "",
           address: listing.address || "",
@@ -79,15 +100,19 @@ export default function UpdateListing() {
           parking: Boolean(listing.parking),
           type: listing.type || "sale",
           offer: Boolean(listing.offer),
+          owner:listing.owner
         });
         setExistingImages(listing.imageUrls || []);
       } catch (err) {
-        if (ignore) return;
-        console.log("Fetch listing for edit error:", err.response?.data || err.message);
-        if (err.response?.status === 403) {
-          setForbidden(true);
-        } else {
-          setPageError(err.response?.data?.message || "Couldn't load this listing.");
+        if(isAxiosError(err)){
+
+          if (ignore) return;
+          console.log("Fetch listing for edit error:", err.response?.data || err.message);
+          if (err.response?.status === 403) {
+            setForbidden(true);
+          } else {
+            setPageError(err.response?.data?.message || "Couldn't load this listing.");
+          }
         }
       } finally {
         if (!ignore) setPageLoading(false);
@@ -106,7 +131,17 @@ export default function UpdateListing() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleChange = (e) => {
+  const handleChange = ( e:
+        | React.ChangeEvent<HTMLInputElement>
+        | React.ChangeEvent<HTMLTextAreaElement>
+        | React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, type, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setSuccess(false);
+    if (name === "offer" || name === "discountedPrice" || name === "regularPrice") setPriceError("");
+  };
+  
+  const handleCheckBoxChange = ( e:React.ChangeEvent<HTMLInputElement>) => {
     const { name, type, checked, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
     setSuccess(false);
@@ -115,7 +150,7 @@ export default function UpdateListing() {
 
   const totalImageCount = existingImages.length + newFiles.length;
 
-  const handleFileChange = (e) => {
+  const handleFileChange = (e:React.ChangeEvent<HTMLInputElement>) => {
     const picked = Array.from(e.target.files || []);
     if (picked.length === 0) return;
 
@@ -125,8 +160,8 @@ export default function UpdateListing() {
       return;
     }
 
-    const validFiles = [];
-    const rejected = [];
+    const validFiles :File[]= [];
+    const rejected :string[]= [];
 
     picked.forEach((file) => {
       if (!file.type.startsWith("image/")) {
@@ -150,17 +185,22 @@ export default function UpdateListing() {
     e.target.value = "";
   };
 
-  const removeExistingImage = (index) => {
+  const removeExistingImage = (index:number) => {
     setExistingImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const removeNewFile = (index) => {
-    URL.revokeObjectURL(newPreviews[index]);
+  const removeNewFile = (index:number) => {
+     const preview = newPreviews[index];
+
+    if (preview) {
+      URL.revokeObjectURL(preview);
+    }
+
     setNewFiles((prev) => prev.filter((_, i) => i !== index));
     setNewPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSuccess(false);
     setError("");
@@ -186,16 +226,16 @@ export default function UpdateListing() {
     try {
       const payload = new FormData();
       payload.append("name", formData.name);
-      payload.append("description", formData.description);
-      payload.append("address", formData.address);
-      payload.append("regularPrice", formData.regularPrice);
-      payload.append("discountedPrice", formData.offer ? formData.discountedPrice : 0);
-      payload.append("bedrooms", formData.bedrooms);
-      payload.append("bathrooms", formData.bathrooms);
-      payload.append("furnished", formData.furnished);
-      payload.append("parking", formData.parking);
-      payload.append("type", formData.type);
-      payload.append("offer", formData.offer);
+      payload.append("description", String(formData.description));
+      payload.append("address", String(formData.address));
+      payload.append("regularPrice", String(formData.regularPrice));
+      payload.append("discountedPrice", String(formData.offer ? formData.discountedPrice : 0));
+      payload.append("bedrooms", String(formData.bedrooms));
+      payload.append("bathrooms", String(formData.bathrooms));
+      payload.append("furnished", String(formData.furnished));
+      payload.append("parking", String(formData.parking));
+      payload.append("type", String(formData.type));
+      payload.append("offer", String(formData.offer));
       payload.append("existingImages", JSON.stringify(existingImages));
       newFiles.forEach((file) => payload.append("images", file));
 
@@ -206,6 +246,7 @@ export default function UpdateListing() {
       setLoading(false);
       navigate(`/listings/${res.data?.updatedListing?._id || id}`);
     } catch (err) {
+      if(isAxiosError(err)){
       console.log("Update listing error:", err.response?.data || err.message);
       if (err.response?.status === 403) {
         setError("You don't have permission to edit this listing.");
@@ -219,6 +260,7 @@ export default function UpdateListing() {
       }
       setLoading(false);
     }
+  }
   };
 
   if (pageLoading) {
@@ -378,15 +420,15 @@ export default function UpdateListing() {
 
           <div className="flex flex-wrap gap-5 mb-6 mt-4">
             <label className="flex items-center gap-2 text-sm" style={{ color: C.paper }}>
-              <input type="checkbox" name="furnished" checked={formData.furnished} onChange={handleChange} />
+              <input type="checkbox" name="furnished" checked={formData.furnished} onChange={handleCheckBoxChange} />
               Furnished
             </label>
             <label className="flex items-center gap-2 text-sm" style={{ color: C.paper }}>
-              <input type="checkbox" name="parking" checked={formData.parking} onChange={handleChange} />
+              <input type="checkbox" name="parking" checked={formData.parking} onChange={handleCheckBoxChange} />
               Parking available
             </label>
             <label className="flex items-center gap-2 text-sm" style={{ color: C.paper }}>
-              <input type="checkbox" name="offer" checked={formData.offer} onChange={handleChange} />
+              <input type="checkbox" name="offer" checked={formData.offer} onChange={handleCheckBoxChange} />
               Has an active offer
             </label>
           </div>

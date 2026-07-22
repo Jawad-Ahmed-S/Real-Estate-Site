@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Camera, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
-import { updateUserFailure, updateUserSuccess, updateUserStart, clearError } from "../redux/user/userSlice";
-import Header from "../components/header";
-import axios from "axios";
-import axiosInstance from "../api/axiosInstance";
+import { updateUserFailure, updateUserSuccess, updateUserStart, clearError } from "../redux/user/userSlice.js";
+import Header from "../components/header.js";
+import axiosInstance from "../api/axiosInstance.js";
+import type { RootState } from "../redux/store.js";
+import { isAxiosError } from "axios";
 
 const C = {
   ink: "#0F1A2B",
@@ -22,9 +23,9 @@ const fontDisplay = { fontFamily: "'Fraunces', serif" };
 const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
 export default function ProfilePage() {
-  const { currentUser, loading, error } = useSelector((state) => state.user);
+  const { currentUser, loading, error } = useSelector((state:RootState) => state.user);
   const dispatch = useDispatch();
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     firstName: currentUser?.firstName || "",
@@ -32,9 +33,9 @@ export default function ProfilePage() {
     email: currentUser?.email || "",
   });
 
-  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   
-  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarError, setAvatarError] = useState("");
   const [success, setSuccess] = useState(false);
 
@@ -44,10 +45,10 @@ export default function ProfilePage() {
   // action (e.g. a failed sign-in) that's still sitting in the store
   useEffect(() => {
     if (error) dispatch(clearError());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, []);
 
-  const handleChange = (e) => {
+  const handleChange = (e:React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setSuccess(false);
     if (error) dispatch(clearError());
@@ -57,7 +58,7 @@ export default function ProfilePage() {
     fileInputRef.current?.click();
   };
 
-  const handleAvatarChange = (e) => {
+  const handleAvatarChange = (e:React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -77,7 +78,7 @@ export default function ProfilePage() {
       setAvatarError("");
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSuccess(false);
     dispatch(updateUserStart());
@@ -102,17 +103,20 @@ export default function ProfilePage() {
         setAvatarPreview(null);
         setSuccess(true);
     } catch (err) {
-      console.log("Update profile error:", err.response?.data || err.message || err);
+      if( isAxiosError(err)){
 
-      const backendMessage =
+        console.log("Update profile error:", err.response?.data || err.message || err);
+        
+        const backendMessage =
         err.response?.data?.message ||   
         err.response?.data?.error ||     
         err.response?.data?.errors?.[0]?.message ||
         (typeof err.response?.data === "string" ? err.response.data : null) ||
         err.message ||                   
         "Something went wrong updating your profile.";
-
-      dispatch(updateUserFailure(backendMessage));
+        
+        dispatch(updateUserFailure(backendMessage));
+      }
     }
   };
 

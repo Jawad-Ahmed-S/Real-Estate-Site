@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
-import axios from "axios";
 import { Loader2, AlertCircle, Trash2, Pencil, Check, X as XIcon, MapPin } from "lucide-react";
 import Header from "../components/header";
 import axiosInstance from "../api/axiosInstance";
-
+import type { RootState } from "../redux/store";
+import { isAxiosError } from "axios";
+import type{ InquiryInterface } from "../types/inquiry";
 const C = {
   paper: "#FBF9F4",
   charcoal: "#1C2333",
@@ -20,7 +21,7 @@ const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
 const BASE_URL = `/api/v1/inquiry`;
 
-const timeAgo = (dateStr) => {
+const timeAgo = (dateStr:Date) => {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 60) return `${mins || 1}m ago`;
@@ -32,17 +33,17 @@ const timeAgo = (dateStr) => {
 };
 
 export default function InquiriesPage() {
-  const { currentUser } = useSelector((state) => state.user);
+  const { currentUser } = useSelector((state:RootState) => state.user);
 
-  const [tab, setTab] = useState("received"); // "received" | "sent"
-  const [inquiries, setInquiries] = useState([]);
+  const [tab, setTab] = useState("received"); 
+  const [inquiries, setInquiries] = useState<InquiryInterface[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState<string|null>(null);//
   const [editValue, setEditValue] = useState("");
-  const [savingId, setSavingId] = useState(null);
-  const [deletingId, setDeletingId] = useState(null);
+  const [savingId, setSavingId] = useState<string|null>(null);//
+  const [deletingId, setDeletingId] = useState<string|null>(null);//
   const [actionError, setActionError] = useState("");
 
   useEffect(() => {
@@ -57,18 +58,22 @@ export default function InquiriesPage() {
         console.log(res)
         if (!ignore) setInquiries(res.data?.myInquiries || []);
       } catch (err) {
-        if (ignore) return;
-        console.log("Fetch inquiries error:", err.response?.data || err.message);
-        setError(err.response?.data?.message || "Couldn't load your inquiries right now.");
-      } finally {
-        if (!ignore) setLoading(false);
-      }
+        if(isAxiosError(err)){
+
+          if (ignore) return;
+          console.log("Fetch inquiries error:", err.response?.data || err.message);
+          setError(err.response?.data?.message || "Couldn't load your inquiries right now.");
+        }
+        }
+        finally {
+            if (!ignore) setLoading(false);
+        }
     };
     fetchInquiries();
     return () => { ignore = true; };
   }, [tab]);
 
-  const startEdit = (inquiry) => {
+  const startEdit = (inquiry:InquiryInterface) => {
     setEditingId(inquiry._id);
     setEditValue(inquiry.message);
     setActionError("");
@@ -79,7 +84,7 @@ export default function InquiriesPage() {
     setEditValue("");
   };
 
-  const saveEdit = async (id) => {
+  const saveEdit = async (id:string) => {
     setSavingId(id);
     setActionError("");
     try {
@@ -92,14 +97,15 @@ export default function InquiriesPage() {
       setInquiries((prev) => prev.map((inq) => (inq._id === id ? { ...inq, message: updated?.message ?? editValue } : inq)));
       setEditingId(null);
     } catch (err) {
+      if(isAxiosError(err)){
       console.log("Update inquiry error:", err.response?.data || err.message);
       setActionError(err.response?.data?.message || "Couldn't save that change.");
-    } finally {
+    } }finally {
       setSavingId(null);
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id:string) => {
     if (!window.confirm("Delete this inquiry? This can't be undone.")) return;
     setDeletingId(id);
     setActionError("");
@@ -107,9 +113,10 @@ export default function InquiriesPage() {
       await axiosInstance.delete(`${BASE_URL}/${id}`);
       setInquiries((prev) => prev.filter((inq) => inq._id !== id));
     } catch (err) {
+      if(isAxiosError(err)){
       console.log("Delete inquiry error:", err.response?.data || err.message);
       setActionError(err.response?.data?.message || "Couldn't delete that inquiry.");
-    } finally {
+    }} finally {
       setDeletingId(null);
     }
   };
@@ -179,7 +186,7 @@ export default function InquiriesPage() {
         ) : (
           <div className="flex flex-col gap-3">
             {inquiries.map((inquiry) => {
-              const isMine = tab === "sent"; // only your own sent messages are editable
+              const isMine = tab === "sent"; 
               const counterpart = tab === "sent" ? inquiry.reciever : inquiry.sender;
 
               return (

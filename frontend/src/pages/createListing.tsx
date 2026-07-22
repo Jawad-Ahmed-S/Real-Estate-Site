@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { ImagePlus, X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
-import Header from "../components/header";
-import axiosInstance from "../api/axiosInstance";
+import Header from "../components/header.js";
+import axiosInstance from "../api/axiosInstance.js";
+import type { ListingInterface } from "../types/listing.js";
+import { isAxiosError } from "axios";
 
 const C = {
   ink: "#0F1A2B",
@@ -23,32 +24,34 @@ const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 const MAX_IMAGES = 10;
 const MAX_SIZE = 5 * 1024 * 1024;
 
-const initialForm = {
+const initialForm:ListingInterface = {
+  _id:"",
   name: "",
   description: "",
   address: "",
-  regularPrice: "",
-  discountedPrice: "",
+  regularPrice: 0,
+  discountedPrice: 0,
   bedrooms: 1,
   bathrooms: 1,
   furnished: false,
   parking: false,
-  type: "sale",
+  type: "sell",
+  owner:"",
   offer: false,
 };
 
 export default function CreateListing() {
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState(initialForm);
-  const [newFiles, setNewFiles] = useState([]);
-  const [newPreviews, setNewPreviews] = useState([]);
+  const [formData, setFormData] = useState<ListingInterface>(initialForm);
+  const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [newPreviews, setNewPreviews] = useState<string[]>([]);
   const [fileError, setFileError] = useState("");
   const [priceError, setPriceError] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // revoke every blob URL on unmount, no matter how the page is left
   useEffect(() => {
@@ -58,14 +61,24 @@ export default function CreateListing() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleChange = (e) => {
+  const handleChange = ( e:
+        | React.ChangeEvent<HTMLInputElement>
+        | React.ChangeEvent<HTMLTextAreaElement>
+        | React.ChangeEvent<HTMLSelectElement>) => {
+    const { name, type, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setSuccess(false);
+    if (name === "offer" || name === "discountedPrice" || name === "regularPrice") setPriceError("");
+  };
+  
+  const handleCheckBoxChange = ( e:React.ChangeEvent<HTMLInputElement>) => {
     const { name, type, checked, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
     setSuccess(false);
     if (name === "offer" || name === "discountedPrice" || name === "regularPrice") setPriceError("");
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = (e:React.ChangeEvent<HTMLInputElement>) => {
     const picked = Array.from(e.target.files || []);
     if (picked.length === 0) return;
 
@@ -76,8 +89,8 @@ export default function CreateListing() {
       return;
     }
 
-    const validFiles = [];
-    const rejected = [];
+    const validFiles:File[] = [];
+    const rejected:string[] = [];
 
     picked.forEach((file) => {
       if (!file.type.startsWith("image/")) {
@@ -105,15 +118,15 @@ export default function CreateListing() {
     e.target.value = ""; // allow re-selecting the same file later
   };
 
-  const removeNewFile = (index) => {
-    URL.revokeObjectURL(newPreviews[index]);
+  const removeNewFile = (index:number) => {
+    URL.revokeObjectURL(String(newPreviews[index]));
     setNewFiles((prev) => prev.filter((_, i) => i !== index));
     setNewPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const totalImageCount = newFiles.length;
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSuccess(false);
     setError("");
@@ -139,16 +152,16 @@ export default function CreateListing() {
     try {
       const payload = new FormData();
       payload.append("name", formData.name);
-      payload.append("description", formData.description);
+      payload.append("description", String(formData.description));
       payload.append("address", formData.address);
-      payload.append("regularPrice", formData.regularPrice);
-      payload.append("discountedPrice", formData.offer ? formData.discountedPrice : 0);
-      payload.append("bedrooms", formData.bedrooms);
-      payload.append("bathrooms", formData.bathrooms);
-      payload.append("furnished", formData.furnished);
-      payload.append("parking", formData.parking);
-      payload.append("type", formData.type);
-      payload.append("offer", formData.offer);
+      payload.append("regularPrice", String(formData.regularPrice));
+      payload.append("discountedPrice", String(formData.offer ? formData.discountedPrice : 0));
+      payload.append("bedrooms", String(formData.bedrooms));
+      payload.append("bathrooms", String(formData.bathrooms));
+      payload.append("furnished", String(formData.furnished));
+      payload.append("parking", String(formData.parking));
+      payload.append("type", String(formData.type));
+      payload.append("offer", String(formData.offer));
       newFiles.forEach((file) => payload.append("images", file));
 
       const res = await axiosInstance.post(`/api/v1/listing/create`, payload);
@@ -164,14 +177,17 @@ export default function CreateListing() {
       setLoading(false);
       navigate(`/listings/${res.data.listing._id}`);
     } catch (err) {
-      console.log("Create listing error:", err.response?.data || err.message);
-      const backendMessage =
+      if(isAxiosError(err)){
+
+        console.log("Create listing error:", err.response?.data || err.message);
+        const backendMessage =
         err.response?.data?.message ||
         err.response?.data?.error ||
         err.message ||
         "Something went wrong creating the listing.";
-      setError(backendMessage);
-      setLoading(false);
+        setError(backendMessage);
+        setLoading(false);
+      }
     }
   };
 
@@ -301,15 +317,15 @@ export default function CreateListing() {
           {/* toggles */}
           <div className="flex flex-wrap gap-5 mb-6 mt-4">
             <label className="flex items-center gap-2 text-sm" style={{ color: C.paper }}>
-              <input type="checkbox" name="furnished" checked={formData.furnished} onChange={handleChange} />
+              <input type="checkbox" name="furnished" checked={formData.furnished} onChange={handleCheckBoxChange} />
               Furnished
             </label>
             <label className="flex items-center gap-2 text-sm" style={{ color: C.paper }}>
-              <input type="checkbox" name="parking" checked={formData.parking} onChange={handleChange} />
+              <input type="checkbox" name="parking" checked={formData.parking} onChange={handleCheckBoxChange} />
               Parking available
             </label>
             <label className="flex items-center gap-2 text-sm" style={{ color: C.paper }}>
-              <input type="checkbox" name="offer" checked={formData.offer} onChange={handleChange} />
+              <input type="checkbox" name="offer" checked={formData.offer} onChange={handleCheckBoxChange} />
               Has an active offer
             </label>
           </div>

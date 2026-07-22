@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import axios from "axios";
+
 import {
   Plus, Pencil, Trash2, Loader2, AlertCircle, BedDouble, Bath, MapPin, Tag,
 } from "lucide-react";
 import Header from "../components/header";
 import axiosInstance from "../api/axiosInstance";
+import { isAxiosError } from "axios";
+import type { RootState } from "../redux/store";
+import type { ListingInterface } from "../types/listing";
 
 const C = {
   ink: "#0F1A2B",
@@ -24,19 +27,19 @@ const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 const BASE_URL = `/api/v1/listing/my-listings`;
 const BASE_DELETE_URL = `/api/v1/listing`;
 
-const formatPKR = (n) => (typeof n === "number" ? `PKR ${n.toLocaleString("en-PK")}` : "—");
+const formatPKR = (n:number) => (typeof n === "number" ? `PKR ${n.toLocaleString("en-PK")}` : "—");
 
 export default function MyListings() {
-  const { currentUser } = useSelector((state) => state.user);
+  const { currentUser } = useSelector((state:RootState) => state.user);
   const navigate = useNavigate();
 
-  const [listings, setListings] = useState([]);
+  const [listings, setListings] = useState<ListingInterface[]>([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
-  const [deletingId, setDeletingId] = useState(null);
+  const [deletingId, setDeletingId] = useState<string|null>(null);
   const [deleteError, setDeleteError] = useState("");
 
   
@@ -60,9 +63,12 @@ export default function MyListings() {
         setHasMore(results.length === RESULTS_PER_PAGE);
         setPage(1);
       } catch (err) {
-        if (ignore) return;
-        console.log("Fetch my listings error:", err.response?.data || err.message);
-        setError(err.response?.data?.message || "Couldn't load your listings right now.");
+        if(isAxiosError(err)){
+
+          if (ignore) return;
+          console.log("Fetch my listings error:", err.response?.data || err.message);
+          setError(err.response?.data?.message || "Couldn't load your listings right now.");
+        }
       } finally {
         if (!ignore) setLoading(false);
       }
@@ -76,6 +82,7 @@ export default function MyListings() {
     const nextPage = page + 1;
     setLoadingMore(true);
     try {
+      if (!currentUser) return;
       const res = await axiosInstance.get(BASE_URL, {
         params: { owner: currentUser._id, page: nextPage },
       });
@@ -84,14 +91,17 @@ export default function MyListings() {
       setHasMore(results.length === RESULTS_PER_PAGE);
       setPage(nextPage);
     } catch (err) {
+      
+        if(isAxiosError(err)){
       console.log("Load more error:", err.response?.data || err.message);
       setError(err.response?.data?.message || "Couldn't load more listings.");
+        }
     } finally {
       setLoadingMore(false);
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id:string) => {
     if (!window.confirm("Delete this listing? This can't be undone.")) return;
 
     setDeletingId(id);
@@ -100,12 +110,16 @@ export default function MyListings() {
       await axiosInstance.delete(`${BASE_DELETE_URL}/${id}`);
       setListings((prev) => prev.filter((l) => l._id !== id));
     } catch (err) {
+      
+        if(isAxiosError(err)){
       console.log("Delete listing error:", err.response?.data || err.message);
+        
       if (err.response?.status === 403) {
         setDeleteError("You don't have permission to delete this listing.");
       } else {
         setDeleteError(err.response?.data?.message || "Couldn't delete that listing right now.");
       }
+    }
     } finally {
       setDeletingId(null);
     }

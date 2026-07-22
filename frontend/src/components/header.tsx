@@ -10,13 +10,15 @@ const C = {
   brass: "#B8894F",
 };
 
-import {signOutUserFailure,signOutUserStart,signOutUserSuccess} from '../redux/user/userSlice'
-import axiosInstance from "../api/axiosInstance";
+import {signOutUserFailure,signOutUserStart,signOutUserSuccess} from '../redux/user/userSlice.js'
+import axiosInstance from "../api/axiosInstance.jsx";
 
+
+import type { RootState,AppDispatch } from "../redux/store.js";
 const fontDisplay = { fontFamily: "'Fraunces', serif" };
 
 export default function Header() {
-  const { currentUser } = useSelector((state) => state.user);
+  const { currentUser } = useSelector((state:RootState) => state.user);
    const dispatch = useDispatch();
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
@@ -43,9 +45,11 @@ export default function Header() {
         dispatch(signOutUserFailure(res.data?.error || "Logout failed"));
       }
     } catch (err) {
-      console.log(err.response)
-      dispatch(signOutUserFailure(err.response?.data?.error || "Something went wrong"));
+      if (axios.isAxiosError(err)) {
+        console.log(err.response);
+        dispatch(signOutUserFailure(err.response?.data?.error || "Something went wrong"));
     }
+  }
   };
   
   useEffect(() => {
@@ -118,7 +122,7 @@ export default function Header() {
         <Link to="/profile" className="shrink-0 transition-transform hover:scale-105 active:scale-95">
           <img
             src={currentUser.avatar?.url || ""}
-            alt={currentUser.username}
+            alt={currentUser.firstName}
             className="w-9 h-9 rounded-full object-cover"
             style={{ border: `1px solid ${C.brass}` }}
           />
@@ -157,13 +161,13 @@ export default function Header() {
         <Link to="/profile" className="flex flex-col gap-0.5">
           <span className="text-xs" style={{ color: "#8A9BA8" }}>Logged in as</span>
           <span className="text-sm font-semibold transition-colors hover:opacity-80" style={{ color: C.paper }}>
-            {currentUser.firstName || currentUser.username}
+            {currentUser.firstName }
           </span>
         </Link>
         <Link to="/profile" className="shrink-0">
           <img
             src={currentUser.avatar?.url || ""}
-            alt={currentUser.username}
+            alt={currentUser.firstName}
             className="w-9 h-9 rounded-full object-cover transition-transform active:scale-95"
             style={{ border: `1px solid ${C.brass}` }}
           />

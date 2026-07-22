@@ -1,8 +1,15 @@
 import { createSlice } from "@reduxjs/toolkit";
+import type { UserInterface } from "../../types/user.js";
+
+export interface UserState {
+  currentUser: UserInterface | null;
+  token: string | null;
+  error: string | null;
+  loading: boolean;
+}
 
 
-
-const initialState = {
+const initialState:UserState = {
     currentUser:null,
     token:null,
     error:null,
@@ -26,7 +33,7 @@ const userSlice = createSlice({
             state.error = action.payload
             state.loading=false;
         },
-        clearError:(state,action)=>{
+        clearError:(state)=>{
             state.error = null
         },
         updateUserStart:(state)=>{

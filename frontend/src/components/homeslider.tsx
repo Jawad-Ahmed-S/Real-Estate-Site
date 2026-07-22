@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import PropertyCard from "./propertyCard";
+import PropertyCard from "./propertyCard.js";
 import { Link } from "react-router-dom";
-import axiosInstance from "../api/axiosInstance";
+import axiosInstance from "../api/axiosInstance.js";
 
 const C = {
   charcoal: "#1C2333",

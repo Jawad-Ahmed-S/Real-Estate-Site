@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
-import { Loader2, AlertCircle, Heart } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import Header from "../components/header";
 import PropertyCard from "../components/propertyCard";
 import axiosInstance from "../api/axiosInstance";
+import type { WishlistIterface } from "../types/wishlist";
+import { isAxiosError } from "axios";
 
 const C = {
   paper: "#FBF9F4",
@@ -21,10 +22,10 @@ const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 const BASE_URL = `/api/v1/wishlist`;
 
 export default function WishlistPage() {
-  const [favourites, setFavourites] = useState([]);
+  const [favourites, setFavourites] = useState<WishlistIterface[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [removingId, setRemovingId] = useState(null);
+  const [removingId, setRemovingId] = useState<string|null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -35,9 +36,12 @@ export default function WishlistPage() {
         const res = await axiosInstance.get(`${BASE_URL}/`);
         if (!ignore) setFavourites(res.data?.favourites || []);
       } catch (err) {
-        if (ignore) return;
-        console.log("Fetch wishlist error:", err.response?.data || err.message);
-        setError(err.response?.data?.message || "Couldn't load your wishlist right now.");
+        if(isAxiosError(err)){
+
+          if (ignore) return;
+          console.log("Fetch wishlist error:", err.response?.data || err.message);
+          setError(err.response?.data?.message || "Couldn't load your wishlist right now.");
+        }
       } finally {
         if (!ignore) setLoading(false);
       }
@@ -46,16 +50,18 @@ export default function WishlistPage() {
     return () => { ignore = true; };
   }, []);
 
-  const handleRemove = async (favouriteId) => {
+  const handleRemove = async (favouriteId:string) => {
     setRemovingId(favouriteId);
     setError("");
     try {
       await axiosInstance.delete(`${BASE_URL}/${favouriteId}`);
       setFavourites((prev) => prev.filter((fav) => fav._id !== favouriteId));
     } catch (err) {
+      if(isAxiosError(err)){
+
       console.log("Remove favourite error:", err.response?.data || err.message);
       setError(err.response?.data?.message || "Couldn't remove that listing right now.");
-    } finally {
+    }} finally {
       setRemovingId(null);
     }
   };

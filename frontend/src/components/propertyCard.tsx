@@ -1,5 +1,6 @@
 import { BedDouble, Bath, Sofa, Car, MapPin, Tag, Heart, Loader2 } from "lucide-react";
-
+import type { ListingInterface } from "../types/listing.jsx";
+import type React from "react";
 const C = {
   charcoal: "#1C2333",
   charcoalSoft: "#5B6472",
@@ -7,12 +8,18 @@ const C = {
   hair: "#E4DFD1",
   paper: "#FBF9F4",
 };
+interface PropertyCardProps{
+  listing:ListingInterface,
+  className?: string,
+  isWishlisted: boolean,
+  onToggleWishlist: (() => void | Promise<void>) | undefined;
+  wishlistBusy:boolean,
+}
 const fontDisplay = { fontFamily: "'Fraunces', serif" };
 const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
-const formatPKR = (n) =>
+const formatPKR = (n:number) =>
   typeof n === "number" ? `PKR ${n.toLocaleString("en-PK")}` : "—";
-
 
 export default function PropertyCard({
   listing,
@@ -20,7 +27,9 @@ export default function PropertyCard({
   isWishlisted = false,
   onToggleWishlist,
   wishlistBusy = false,
-}) {
+}:PropertyCardProps) {
+  
+  
   let {
     imageUrls, name, address, regularPrice, discountedPrice,
     bedrooms, bathrooms, furnished, parking, type, offer,
@@ -31,7 +40,7 @@ export default function PropertyCard({
   
   const displayPrice = discountedPrice;
 
-  const handleWishlistClick = (e) => {
+  const handleWishlistClick = (e:React.MouseEvent<HTMLButtonElement>) => {
     // card is usually wrapped in a <Link>, so stop that navigation from firing
     e.preventDefault();
     e.stopPropagation();

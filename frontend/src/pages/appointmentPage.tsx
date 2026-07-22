@@ -2,12 +2,13 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import dayjs from "dayjs";
 import utc from 'dayjs/plugin/utc'
-import axios from "axios";
 import {
   Loader2, AlertCircle, MapPin, Check, X as XIcon, Ban, CalendarCheck2,
 } from "lucide-react";
 import Header from "../components/header";
 import axiosInstance from "../api/axiosInstance";
+import { isAxiosError } from "axios";
+import type { AppointmentInterface } from "../types/appointment";
 
 dayjs.extend(utc)
 const C = {
@@ -33,19 +34,19 @@ const STATUS_STYLES = {
   completed: { bg: "#EAEEF2", text: "#5B6472", label: "Completed" },
 };
 
-const formatProposedTime = (utcDateStr) =>
+const formatProposedTime = (utcDateStr:Date) =>
   dayjs.utc(utcDateStr).local().format("ddd, D MMM YYYY, h:mm A");
 
 
 
 
 export default function AppointmentsPage() {
-  const [tab, setTab] = useState("received"); // "received" (owner) | "sent" (buyer)
-  const [appointments, setAppointments] = useState([]);
+  const [tab, setTab] = useState("received"); 
+  const [appointments, setAppointments] = useState<AppointmentInterface[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
-  const [actingId, setActingId] = useState(null);
+  const [actingId, setActingId] = useState<string|null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -60,9 +61,12 @@ export default function AppointmentsPage() {
         console.log("Appointments recived on frontnend: ",res.data?.myAppointments)
         if (!ignore) setAppointments(res.data?.myAppointments || []);
       } catch (err) {
-        if (ignore) return;
-        console.log("Fetch appointments error:", err.response?.data || err.message);
-        setError(err.response?.data?.message || "Couldn't load appointments right now.");
+        if(isAxiosError(err)){
+
+          if (ignore) return;
+          console.log("Fetch appointments error:", err.response?.data || err.message);
+          setError(err.response?.data?.message || "Couldn't load appointments right now.");
+        }
       } finally {
         if (!ignore) setLoading(false);
       }
@@ -71,7 +75,7 @@ export default function AppointmentsPage() {
     return () => { ignore = true; };
   }, [tab]);
 
-  const runAction = async (id, requestFn, { removeOnSuccess = false } = {}) => {
+  const runAction = async (id:string, requestFn:Function, { removeOnSuccess = false } = {}) => {
                           
     setActingId(id);
     setActionError("");
@@ -84,23 +88,24 @@ export default function AppointmentsPage() {
         setAppointments((prev) => prev.map((a) => (a._id === id ? { ...a, ...updated } : a)));
       }
     } catch (err) {
+      if(isAxiosError(err)){
       console.log("Appointment action error:", err.response?.data || err.message);
       setActionError(err.response?.data?.message || "That action couldn't be completed.");
-    } finally {
+    } }finally {
       setActingId(null);
     }
   };
 
-  const handleCancel = (id) => {
+  const handleCancel = (id:string) => {
     if (!window.confirm("Cancel this appointment request?")) return;
     runAction(id, () => axiosInstance.delete(`${BASE_URL}/${id}`), { removeOnSuccess: true });
   };
 
-  const handleStatusUpdate = (id, newStatus) => {
+  const handleStatusUpdate = (id:string, newStatus:string) => {
     runAction(id, () => axiosInstance.patch(`${BASE_URL}/statusUpdate/${id}`, { newStatus }));
   };
 
-  const handleComplete = (id) => {
+  const handleComplete = (id:string) => {
     runAction(id, () => axiosInstance.patch(`${BASE_URL}/complete/${id}`, {}));
   };
 

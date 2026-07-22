@@ -1,16 +1,20 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useSelector } from "react-redux";
-import axios from "axios";
 import {
   BedDouble, Bath, Sofa, Car, MapPin, Tag, Loader2, AlertCircle, Pencil, Trash2,
   Send, CheckCircle2, CalendarClock, Heart,
 } from "lucide-react";
-import Header from "../components/header";
-import axiosInstance from "../api/axiosInstance";
+import Header from "../components/header.js";
+import axiosInstance from "../api/axiosInstance.js";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import type { RootState } from "../redux/store.js";
+import { isAxiosError } from "axios";
+import type { WishlistIterface } from "../types/wishlist.js";
+import type { ListingInterface } from "../types/listing.js";
+import type{ IImage } from '../types/Image.js';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -31,14 +35,31 @@ const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 
 const WISHLIST_BASE_URL = `/api/v1/wishlist`;
 
-const formatPKR = (n) => (typeof n === "number" ? `PKR ${n.toLocaleString("en-PK")}` : "—");
+const formatPKR = (n:number) => (typeof n === "number" ? `PKR ${n.toLocaleString("en-PK")}` : "—");
+
+const emptyListing: ListingInterface = {
+  _id: "",
+  name: "",
+  description: "",
+  address: "",
+  regularPrice: 0,
+  discountedPrice: 0,
+  bedrooms: 1,
+  bathrooms: 1,
+  furnished: false,
+  parking: false,
+  type: "sell",
+  offer: false,
+  owner:"",
+  imageUrls: [],
+};
 
 export default function ListingDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { currentUser } = useSelector((state) => state.user);
+  const { currentUser } = useSelector((state:RootState) => state.user);
 
-  const [listing, setListing] = useState(null);
+  const [listing, setListing] = useState<ListingInterface>(emptyListing);
   const [activeImage, setActiveImage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -56,7 +77,7 @@ export default function ListingDetail() {
   const [appointmentSent, setAppointmentSent] = useState(false);
 
   const [wishlisted, setWishlisted] = useState(false);
-  const [wishlistId, setWishlistId] = useState(null);
+  const [wishlistId, setWishlistId] = useState<string|null>(null);
   const [wishlistBusy, setWishlistBusy] = useState(false);
   const [wishlistError, setWishlistError] = useState("");
 
@@ -71,9 +92,12 @@ export default function ListingDetail() {
         
         if (!ignore) setListing(res.data.listingData || res.data);
       } catch (err) {
-        if (ignore) return;
-        console.log("Fetch listing error:", err.response?.data || err.message);
-        setError(err.response?.data?.message || "Couldn't load this listing.");
+        if(isAxiosError(err)){
+
+          if (ignore) return;
+          console.log("Fetch listing error:", err.response?.data || err.message);
+          setError(err.response?.data?.message || "Couldn't load this listing.");
+        }
       } finally {
         if (!ignore) setLoading(false);
       }
@@ -93,7 +117,7 @@ export default function ListingDetail() {
     const fetchWishlistStatus = async () => {
       try {
         const res = await axiosInstance.get(`${WISHLIST_BASE_URL}/`);
-        const favourites = res.data?.favourites || [];
+        const favourites:WishlistIterface[] = res.data?.favourites || [];
         const match = favourites.find((fav) => {
           const listingId = typeof fav.listing === "string" ? fav.listing : fav.listing?._id;
           return listingId === id;
@@ -103,16 +127,17 @@ export default function ListingDetail() {
           setWishlistId(match?._id || null);
         }
       } catch (err) {
-        console.log("Fetch wishlist status error:", err.response?.data || err.message);
+        if(isAxiosError(err)){
+          console.log("Fetch wishlist status error:", err.response?.data || err.message);
+        }
       }
     };
     fetchWishlistStatus();
     return () => { ignore = true; };
   }, [currentUser, id]);
 
-  const ownerId =
-    typeof listing?.owner === "string" ? listing.owner : listing?.owner?._id;
-  const isOwner = Boolean(currentUser?._id && ownerId && currentUser._id === ownerId);
+  const ownerId =listing.owner;
+  const isOwner = Boolean(currentUser?._id === ownerId);
 
   const handleDelete = async () => {
     if (!window.confirm("Delete this listing? This can't be undone.")) return;
@@ -123,17 +148,20 @@ export default function ListingDetail() {
       await axiosInstance.delete(`/api/v1/listing/${id}`);
       navigate("/listings");
     } catch (err) {
-      console.log("Delete listing error:", err.response?.data || err.message);
-      if (err.response?.status === 403) {
-        setDeleteError("You don't have permission to delete this listing.");
-      } else {
-        setDeleteError(err.response?.data?.message || "Couldn't delete this listing right now.");
+      if(isAxiosError(err)){
+
+        console.log("Delete listing error:", err.response?.data || err.message);
+        if (err.response?.status === 403) {
+          setDeleteError("You don't have permission to delete this listing.");
+        } else {
+          setDeleteError(err.response?.data?.message || "Couldn't delete this listing right now.");
+        }
+        setDeleting(false);
       }
-      setDeleting(false);
     }
   };
 
-  const handleSendInquiry = async (e) => {
+  const handleSendInquiry = async (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setInquiryError("");
     setInquirySending(true);
@@ -145,14 +173,17 @@ export default function ListingDetail() {
       setInquirySent(true);
       setInquiryMessage("");
     } catch (err) {
-      console.log("Send inquiry error:", err.response?.data || err.message);
-      setInquiryError(err.response?.data?.message || "Couldn't send your message right now.");
+      if(isAxiosError(err)){
+
+        console.log("Send inquiry error:", err.response?.data || err.message);
+        setInquiryError(err.response?.data?.message || "Couldn't send your message right now.");
+      }
     } finally {
       setInquirySending(false);
     }
   };
 
-    const handleRequestAppointment = async (e) => {
+    const handleRequestAppointment = async (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setAppointmentError("");
     setAppointmentSending(true);
@@ -168,8 +199,10 @@ export default function ListingDetail() {
       setAppointmentSent(true);
       setProposedDateTime("");
     } catch (err) {
+      if(isAxiosError(err)){
       console.log("Request appointment error:", err.response?.data || err.message);
       setAppointmentError(err.response?.data?.message || "Couldn't send that request right now.");
+      }
     } finally {
       setAppointmentSending(false);
     }
@@ -193,8 +226,10 @@ export default function ListingDetail() {
         setWishlistId(res.data?.wishlist?._id || null);
       }
     } catch (err) {
+      if(isAxiosError(err)){
       console.log("Wishlist toggle error:", err.response?.data || err.message);
       setWishlistError(err.response?.data?.message || "Couldn't update your wishlist right now.");
+      }
     } finally {
       setWishlistBusy(false);
     }
@@ -230,7 +265,7 @@ export default function ListingDetail() {
   } = listing;
 
   const displayPrice = offer ? discountedPrice : regularPrice;
-  const images = imageUrls?.length ? imageUrls : [{ url: "https://placehold.co/900x600/16273D/9FB3C4?text=No+Photo" }];
+  const images:IImage[] = imageUrls?.length ? imageUrls : [{ url: "https://placehold.co/900x600/16273D/9FB3C4?text=No+Photo",public_id:""}];
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: C.paper }}>

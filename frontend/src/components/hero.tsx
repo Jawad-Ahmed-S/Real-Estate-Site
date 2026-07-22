@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, MapPin, ChevronDown } from "lucide-react";
-
+import type {FormEvent} from "react"
 const C = {
   ink: "#0F1A2B",
   ink2: "#16273D",
@@ -55,7 +55,7 @@ export default function Hero() {
   const [maxPrice, setMaxPrice] = useState("");
   const navigate = useNavigate();
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const params = new URLSearchParams();
 

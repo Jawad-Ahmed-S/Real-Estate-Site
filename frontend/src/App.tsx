@@ -1,22 +1,19 @@
-import { useState } from 'react'
 import './App.css'
 import { BrowserRouter,Routes,Route } from 'react-router-dom'
-import Home from './pages/Home'
-import About from './pages/About'
-import Signup from './pages/Signup'
-import Login from './pages/Login'
-import Profile from './pages/Profile'
-import PrivateRoute from './components/privateRoute'
-import ListingsPage from './pages/Listing'
-import CreateListing from './pages/createListing'
-import ListingDetail from './pages/listingDetails'
-import MyListings from './pages/myListings'
-import UpdateListing from './pages/updateListing'
-import InquiriesPage from './pages/inquiryPage'
-import AppointmentsPage from './pages/appointmentPage'
-import WishlistPage from './pages/wishlistPage'
+import Home from './pages/Home.js'
+import Signup from './pages/Signup.js'
+import Login from './pages/Login.js'
+import Profile from './pages/Profile.js'
+import PrivateRoute from './components/privateRoute.js'
+import ListingsPage from './pages/Listing.js'
+import CreateListing from './pages/createListing.js'
+import ListingDetail from './pages/listingDetails.js'
+import MyListings from './pages/myListings.js'
+import UpdateListing from './pages/updateListing.js'
+import InquiriesPage from './pages/inquiryPage.js'
+import AppointmentsPage from './pages/appointmentPage.js'
+import WishlistPage from './pages/wishlistPage.js'
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
     <>
@@ -28,7 +25,6 @@ function App() {
             <Route path='/login' element={<Login/>}></Route>
             <Route path='/listings' element={<ListingsPage/>}></Route>
             <Route path='/listings/:id' element={<ListingDetail/>}></Route>
-            <Route path='/about' element={<About/>}></Route>
             <Route element={<PrivateRoute/>}>
               <Route path='/mylistings' element={<MyListings/>}></Route>
               <Route path='/listings/create' element={<CreateListing/>}></Route>

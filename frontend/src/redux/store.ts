@@ -1,13 +1,10 @@
 import { configureStore, combineReducers} from '@reduxjs/toolkit'
-import userReducer from './user/userSlice'
+import userReducer from './user/userSlice.js'
 import {persistStore,persistReducer }from 'redux-persist'
-import storageModule from "redux-persist/lib/storage"
-
-const storage = storageModule.default
+import storage from "redux-persist/es/storage"
 
 const rootReducer= combineReducers({user:userReducer})
-
-
+console.log(storage);
 const persistConfig = {
   key: 'user',
   storage
@@ -22,4 +19,6 @@ export const store = configureStore({
   })
 }) 
 
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
 export const persistor = persistStore(store);

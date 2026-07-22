@@ -1,10 +1,9 @@
 
-import { useState } from "react";
-import { Home, Building2, UserRound, Eye, EyeOff } from "lucide-react";
-import axios from 'axios'
+import { useState, type FormEvent } from "react";
+import {Eye, EyeOff } from "lucide-react";
 import {useNavigate} from 'react-router-dom'
-import OAuth from "../components/OAuth";
-import axiosInstance from "../api/axiosInstance";
+import OAuth from "../components/OAuth.js";
+import axiosInstance from "../api/axiosInstance.js";
 const C = {
   ink: "#0F1A2B",
   ink2: "#16273D",
@@ -93,9 +92,9 @@ export default function Signup() {
     return s;
   })();
 
-  const update = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+  const update = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [key]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (form.password !== form.confirm) {
       setError("Passwords don't match — give it another look.");
@@ -128,7 +127,6 @@ export default function Signup() {
 }
 
 const handleGoogleLogin = async ()=>{
-consolelog('handle google')
 
   };
 

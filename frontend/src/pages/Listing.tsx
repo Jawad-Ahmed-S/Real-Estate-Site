@@ -2,10 +2,13 @@ import { useState, useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Search, SlidersHorizontal, Loader2, X, Heart, Plus } from "lucide-react";
-import axios from "axios";
-import Header from "../components/header";
-import PropertyCard from "../components/propertyCard";
-import axiosInstance from "../api/axiosInstance";
+import Header from "../components/header.js";
+import PropertyCard from "../components/propertyCard.js";
+import axiosInstance from "../api/axiosInstance.js";
+import type { RootState } from "../redux/store.js";
+import { isAxiosError } from "axios";
+import type { WishlistIterface } from "../types/wishlist.js";
+import type { ListingInterface } from "../types/listing.js";
 
 const C = {
   ink: "#0F1A2B",
@@ -22,8 +25,8 @@ const fontMono = { fontFamily: "'IBM Plex Mono', monospace" };
 const PAGE_SIZE = 9;
 const WISHLIST_BASE_URL = `/api/v1/wishlist`;
 
-function buildQueryParams(searchParams) {
-  const params = {};
+function buildQueryParams(searchParams:URLSearchParams) {
+  const params: Record<string, string | number | boolean>  = {};
   const keyword = searchParams.get("keyword");
   const type = searchParams.get("type");
   const bedrooms = searchParams.get("bedrooms");
@@ -47,14 +50,14 @@ function buildQueryParams(searchParams) {
 
 export default function ListingsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { currentUser } = useSelector((state) => state.user);
+  const { currentUser } = useSelector((state:RootState) => state.user);
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [priceError, setPriceError] = useState("");
 
-  const [wishlist, setWishlist] = useState([]);
-  const [wishlistBusyId, setWishlistBusyId] = useState(null);
+  const [wishlist, setWishlist] = useState<WishlistIterface[]>([]);
+  const [wishlistBusyId, setWishlistBusyId] = useState<string|null>(null);
 
   const query = searchParams.get("keyword") || "";
   const type = searchParams.get("type") || "";
@@ -80,13 +83,16 @@ export default function ListingsPage() {
         });
         if (!ignore) setListings(res.data?.AllListings || []);
       } catch (err) {
-        if (ignore || err.name === "CanceledError") return;
-        console.log("Failed to fetch listings:", err.response?.data || err.message);
-        setError(err.response?.data?.message || "Couldn't load listings right now.");
-        setListings([]);
-      } finally {
-        if (!ignore) setLoading(false);
-      }
+        if(isAxiosError(err)){
+
+          if (ignore || err.name === "CanceledError") return;
+          console.log("Failed to fetch listings:", err.response?.data || err.message);
+          setError(err.response?.data?.message || "Couldn't load listings right now.");
+          setListings([]);
+        }
+        } finally {
+          if (!ignore) setLoading(false);
+        }
     };
 
     fetchListings();
@@ -105,7 +111,9 @@ export default function ListingsPage() {
         const res = await axiosInstance.get(`${WISHLIST_BASE_URL}/`);
         if (!ignore) setWishlist(res.data?.favourites || []);
       } catch (err) {
-        console.log("Fetch wishlist error:", err.response?.data || err.message);
+        if(isAxiosError(err)){
+          console.log("Fetch wishlist error:", err.response?.data || err.message);
+        }
       }
     };
     fetchWishlist();
@@ -113,15 +121,15 @@ export default function ListingsPage() {
   }, [currentUser]);
 
   const wishlistMap = useMemo(() => {
-    const map = {};
-    wishlist.forEach((fav) => {
+    const map: Record<string,string> = {};
+    wishlist.forEach((fav:WishlistIterface) => {
       const listingId = typeof fav.listing === "string" ? fav.listing : fav.listing?._id;
       if (listingId) map[listingId] = fav._id;
     });
     return map;
   }, [wishlist]);
 
-  const handleToggleWishlist = async (listingId) => {
+  const handleToggleWishlist = async (listingId:string) => {
     if (!currentUser) return;
     const existingFavouriteId = wishlistMap[listingId];
     setWishlistBusyId(listingId);
@@ -135,6 +143,7 @@ export default function ListingsPage() {
         if (created) setWishlist((prev) => [...prev, created]);
       }
     } catch (err) {
+      if(isAxiosError(err))
       console.log("Wishlist toggle error:", err.response?.data || err.message);
     } finally {
       setWishlistBusyId(null);
@@ -144,7 +153,7 @@ export default function ListingsPage() {
   const totalPages = Math.ceil(listings.length / PAGE_SIZE) || 1;
   const pageItems = listings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const setParam = (key, value) => {
+  const setParam = (key:string, value:string) => {
     const next = new URLSearchParams(searchParams);
     if (value) next.set(key, value);
     else next.delete(key);
@@ -152,10 +161,13 @@ export default function ListingsPage() {
     setSearchParams(next);
   };
 
-  const applyPriceRange = (e) => {
+  const applyPriceRange = (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const rawMin = e.target.minPrice.value.trim();
-    const rawMax = e.target.maxPrice.value.trim();
+
+    const form = e.currentTarget;
+    
+    const rawMin = (form.elements.namedItem("minPrice") as HTMLInputElement).value.trim();
+    const rawMax = (form.elements.namedItem("maxPrice") as HTMLInputElement).value.trim();
 
     if (rawMin && rawMax && Number(rawMin) > Number(rawMax)) {
       setPriceError("Min price can't be greater than max price.");
@@ -179,7 +191,7 @@ export default function ListingsPage() {
     setSearchParams(next);
   };
 
-  const goToPage = (n) => {
+  const goToPage = (n:number) => {
     const next = new URLSearchParams(searchParams);
     next.set("page", String(n));
     setSearchParams(next);
@@ -378,7 +390,7 @@ export default function ListingsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {pageItems.map((listing) => (
+            {pageItems.map((listing:ListingInterface) => (
               <Link to={`/listings/${listing._id}`} key={listing._id} className="block">
                 <PropertyCard
                   listing={listing}

@@ -1,12 +1,11 @@
 
-import { useState } from "react";
-import { Home, Building2, UserRound, Eye, EyeOff } from "lucide-react";
-import axios from 'axios'
+import React, { useState } from "react";
+import {Eye, EyeOff } from "lucide-react";
 import { useNavigate,Link } from "react-router-dom";
 import {useDispatch,useSelector} from 'react-redux'
-import { signinFailure, signinStart, signinSucess } from "../redux/user/userSlice";
-import OAuth from "../components/OAuth";
-import axiosInstance from "../api/axiosInstance";
+import { signinFailure, signinStart, signinSucess } from "../redux/user/userSlice.js";
+import axiosInstance from "../api/axiosInstance.js";
+import type{ RootState,AppDispatch } from "../redux/store.js";
 const C = {
   ink: "#0F1A2B",
   ink2: "#16273D",
@@ -81,7 +80,7 @@ export default function Login() {
   const [showPw, setShowPw] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const {loading,error} = useSelector(state=>state.user)
+  const {loading,error} = useSelector((state:RootState)=>state.user)
 
   const strength = (() => {
     const v = form.password;
@@ -93,9 +92,9 @@ export default function Login() {
     return s;
   })();
 
-  const update = (key) => (e) => setForm({ ...form, [key]: e.target.value });
+  const update = (key: keyof typeof form) => (e:React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [key]: e.target.value });
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e:React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     dispatch(signinStart())
     const {email,password} = form;
