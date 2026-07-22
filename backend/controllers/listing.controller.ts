@@ -5,7 +5,7 @@ import ApiFeatures from "../utils/apiFeatures.js";
 import { uploadBufferToCloudinary, deleteFromCloudinary } from "../utils/cloudinaryUpload.js";
 import type { Request,Response,NextFunction } from "express";
 import type { UploadApiResponse } from "cloudinary";
-
+import type {ApiResponse} from "../types/APIRsponseType.js"
 
 interface IImage{
     url:string,
@@ -44,7 +44,12 @@ export const createListing = catchAsyncError(async (req:Request, res:Response, n
     
     const listing = await Listing.create(listingData);
 
-    return res.status(200).json({ sucess: true, message: "Listing Created!", listing });
+    const response: ApiResponse<typeof listing> = {
+        success: true,
+        message: "Listing Created!",
+        data: listing,
+    }
+    return res.status(200).json(response);
 });
  
 
@@ -97,7 +102,13 @@ export const updateListing = catchAsyncError(async (req:Request, res:Response, n
 
     const updatedListing = await Listing.findByIdAndUpdate(listingId, newData, { new: true, runValidators: true });
 
-    return res.status(200).json({ message: "Listing Updated Sucessfully!", updatedListing });
+    
+    const response: ApiResponse<typeof updatedListing> = {
+        success: true,
+        message: "Listing Updated Sucessfully!",
+        data: updatedListing,
+    }
+    return res.status(200).json(response);
 });
 
 
